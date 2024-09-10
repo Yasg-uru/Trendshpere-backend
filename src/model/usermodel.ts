@@ -13,18 +13,8 @@ export interface User extends Document {
   verifyCode: string;
   isVerified: boolean;
   verifyCodeExpiry: Date;
-  Role: "student" | "admin" | "instructor";
-  EnrolledCourses: {
-    courseId: Schema.Types.ObjectId;
-    modulesProgress: {
-      moduleId: Schema.Types.ObjectId;
-      completedLessons: Schema.Types.ObjectId[];
-      progress: number;
-      completionStatus: boolean;
-    }[];
-    overallProgress: number;
-    CompletionStatus: boolean;
-  }[];
+  Role: "user" | "admin";
+
   ResetPasswordToken: string | undefined;
   ResetPasswordTokenExpire: Date | undefined;
 
@@ -76,47 +66,10 @@ const userSchema = new Schema<User>(
     },
     Role: {
       type: String,
-      enum: ["student", "instructor", "admin"],
-      default: "student",
+      enum: ["user", "admin"],
+      default: "user",
     },
-    EnrolledCourses: [
-      {
-        courseId: {
-          type: Schema.Types.ObjectId,
-          ref: "Course",
-        },
-        modulesProgress: [
-          {
-            moduleId: {
-              type: Schema.Types.ObjectId,
-              ref: "Module",
-            },
-            completedLessons: [
-              {
-                type: Schema.Types.ObjectId,
-                ref: "Lesson",
-              },
-            ],
-            progress: {
-              type: Number,
-              default: 0,
-            },
 
-            completionStatus: {
-              type: Boolean,
-            },
-          },
-        ],
-        overallProgress: {
-          type: Number,
-          default: 0,
-        },
-        CompletionStatus: {
-          type: Boolean,
-          default: false,
-        },
-      },
-    ],
     ResetPasswordToken: {
       type: String,
     },

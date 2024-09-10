@@ -151,5 +151,29 @@ class ProductController {
       next();
     }
   }
+  public static async removecart(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { productId, variantId } = req.params;
+      const user = await usermodel.findById(req.user?._id);
+      if (!user) {
+        return next(new Errorhandler(404, "User not found"));
+      }
+      user.cart = user.cart.filter(
+        (c) =>
+          c.productId.toString() !== productId.toString() &&
+          c.variantId.toString() !== variantId.toString()
+      );
+      await user.save();
+      res.status(200).json({
+        message: "Removed cart succcessfully",
+      });
+    } catch (error) {
+      next();
+    }
+  }
 }
 export default ProductController;

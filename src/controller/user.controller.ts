@@ -15,29 +15,31 @@ import catchAsync from "../middleware/catchasync.middleware";
 export const registerUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { username, email, password } = req.body;
-      console.log("this is a req.body", req.body);
-      const ExistingUser = await usermodel.findOne({
-        email,
-        isVerified: true,
-      });
+      const { username, email, password, preferences, bodyMeasurements } =
+        req.body;
+      console.log("This is req.body:", req.body);
 
+      // Check if the user with the email exists and is verified
+      const ExistingUser = await usermodel.findOne({ email, isVerified: true });
       if (ExistingUser) {
-        return next(new Errorhandler(400, "already user exist"));
+        return next(new Errorhandler(400, "User already exists"));
       }
+
+      // Check if the user exists but is unverified
       const ExistingUserUnVerified = await usermodel.findOne({
         email,
         isVerified: false,
       });
       let verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const verifyCodeExpiry = new Date(Date.now() + 3600000); // 1-hour expiry
 
       if (ExistingUserUnVerified) {
-        ExistingUserUnVerified.password = await bcrypt.hash(password, 10);
+        // Update password and verification code for the unverified user
+        ExistingUserUnVerified.password = password;
         ExistingUserUnVerified.verifyCode = verifyCode;
-        ExistingUserUnVerified.verifyCodeExpiry = new Date(
-          Date.now() + 3600000
-        );
+        ExistingUserUnVerified.verifyCodeExpiry = verifyCodeExpiry;
         await ExistingUserUnVerified.save();
+
         const emailResponse = await sendVerificationMail(
           username,
           email,
@@ -47,38 +49,29 @@ export const registerUser = catchAsync(
           return next(new Errorhandler(400, emailResponse.message));
         }
       } else {
-        const verifyCodeExpiry = new Date(Date.now() + 3600000);
+        // For new users
+        let profileUrl = null;
+
         if (req.file && req.file.path) {
+          // If there's an avatar image, upload to Cloudinary
           const cloudinaryUrl = await UploadOnCloudinary(req.file.path);
-
-          const profileUrl = cloudinaryUrl?.secure_url;
-          console.log(
-            "this is a cloudinary and secure url",
-            profileUrl + "     " + cloudinaryUrl
-          );
-          const newUser = new usermodel({
-            username,
-            password,
-            email,
-            profileUrl: profileUrl,
-            verifyCode: verifyCode,
-            verifyCodeExpiry: verifyCodeExpiry,
-            isVerified: false,
-          });
-
-          await newUser.save();
-        } else {
-          const newUser = new usermodel({
-            username,
-            password,
-            email,
-            verifyCode: verifyCode,
-            verifyCodeExpiry: verifyCodeExpiry,
-            isVerified: false,
-          });
-
-          await newUser.save();
+          profileUrl = cloudinaryUrl?.secure_url;
         }
+
+        // Create a new user with optional fields
+        const newUser = new usermodel({
+          username,
+          email,
+          password,
+          profileUrl,
+          verifyCode,
+          verifyCodeExpiry,
+          isVerified: false,
+          preferences: preferences || {}, // default empty preferences
+          bodyMeasurements: bodyMeasurements || {}, // default empty measurements
+        });
+
+        await newUser.save();
 
         const emailResponse = await sendVerificationMail(
           username,
@@ -89,16 +82,18 @@ export const registerUser = catchAsync(
           return next(new Errorhandler(400, emailResponse.message));
         }
       }
+
       res.status(201).json({
         success: true,
-        message:
-          "User registered successfully ,please verify your account first",
+        message: "User registered successfully, please verify your account",
       });
     } catch (error: any) {
-      return next(new Errorhandler(500, "Internal server Error "));
+      console.log(error);
+      return next(new Errorhandler(500, "Internal server error"));
     }
   }
 );
+
 export const verifyuser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -157,8 +152,11 @@ export const Login = catchAsync(async (req, res, next) => {
         )
       );
     }
-    const isCorrectPassword = await user.comparePassword(password);
+    const isCorrectPassword = await bcrypt.compare(password, user.password);
     if (!isCorrectPassword) {
+      console.log(
+        isCorrectPassword + "i am getting incorrect password mismatch"
+      );
       return next(new Errorhandler(404, "Invalid credentials"));
     }
     const token = user.generateToken();
@@ -236,4 +234,3 @@ export const Resetpassword = catchAsync(
     }
   }
 );
-

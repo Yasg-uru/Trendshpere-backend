@@ -16,7 +16,7 @@ interface IProduct extends Document {
   reviews: IProductReview[]; // Customer reviews
   rating: number; // Average rating for the product
   discount?: IProductDiscount; // Optional discount structure
-  calculateOverallStock:()=>void;
+  calculateOverallStock: () => void;
   //   specificDetails?: IProductDetails;
 }
 // interface IProductDetails extends Document {
@@ -99,7 +99,7 @@ const productSchema: Schema = new Schema({
 });
 
 // Functionality for calculating overall stock from variants
-productSchema.methods.calculateOverallStock = function ():void {
+productSchema.methods.calculateOverallStock = function (): void {
   this.overallStock = this.variants.reduce(
     (total: number, variant: IProductVariant) => total + variant.stock,
     0

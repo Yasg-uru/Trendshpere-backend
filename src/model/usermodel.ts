@@ -9,12 +9,47 @@ export interface User extends Document {
   username: string;
   email: string;
   password: string;
-  profileUrl: string;
+  avatar?: string;
   verifyCode: string;
   isVerified: boolean;
   verifyCodeExpiry: Date;
   Role: "user" | "admin";
-
+  bodyMeasurements: {
+    height: number;
+    weight: number;
+    chestSize?: number;
+    waistSize?: number;
+    hipSize?: number;
+  };
+  preferences: {
+    style: string;
+    favoriteColors: string[];
+    preferredMaterials: string[];
+  };
+  tryOnHistory: {
+    productId: Schema.Types.ObjectId;
+    tryOnImage: string;
+    date: Date;
+  }[];
+  cart: {
+    productId: Schema.Types.ObjectId;
+    quantity: number;
+    variantId: Schema.Types.ObjectId;
+  }[];
+  orderHistory: {
+    orderId: Schema.Types.ObjectId;
+    purchaseDate: Date;
+    totalAmount: number;
+  }[];
+  wishlist: Schema.Types.ObjectId[];
+  paymentMethods: {
+    type: string; // 'Card', 'UPI', 'NetBanking'
+    details: string;
+    expirationDate?: string;
+    lastUsed: Date;
+  }[];
+  loyaltyPoints: number;
+  browsingHistory: Schema.Types.ObjectId[];
   ResetPasswordToken: string | undefined;
   ResetPasswordTokenExpire: Date | undefined;
 
@@ -49,7 +84,7 @@ const userSchema = new Schema<User>(
         "your password should be greater than length of 5 characters",
       ],
     },
-    profileUrl: {
+    avatar: {
       type: String,
     },
     verifyCode: {
@@ -69,7 +104,54 @@ const userSchema = new Schema<User>(
       enum: ["user", "admin"],
       default: "user",
     },
-
+    bodyMeasurements: {
+      height: { type: Number, required: true },
+      weight: { type: Number, required: true },
+      chestSize: { type: Number },
+      waistSize: { type: Number },
+      hipSize: { type: Number },
+    },
+    preferences: {
+      style: { type: String },
+      favoriteColors: [{ type: String }],
+      preferredMaterials: [{ type: String }],
+    },
+    tryOnHistory: [
+      {
+        productId: { type: Schema.Types.ObjectId, ref: "Product" },
+        tryOnImage: { type: String },
+        date: { type: Date, default: Date.now },
+      },
+    ],
+    cart: [
+      {
+        productId: { type: Schema.Types.ObjectId, ref: "Product" },
+        quantity: { type: Number, required: true },
+        variantId: {
+          type: Schema.Types.ObjectId,
+          ref: "ProductVariant",
+          required: true,
+        },
+      },
+    ],
+    orderHistory: [
+      {
+        orderId: { type: Schema.Types.ObjectId, ref: "Order" },
+        purchaseDate: { type: Date, default: Date.now },
+        totalAmount: { type: Number, required: true },
+      },
+    ],
+    wishlist: [{ type: Schema.Types.ObjectId, ref: "Product" }],
+    paymentMethods: [
+      {
+        type: { type: String, required: true },
+        details: { type: String, required: true },
+        expirationDate: { type: String },
+        lastUsed: { type: Date, default: Date.now },
+      },
+    ],
+    loyaltyPoints: { type: Number, default: 0 },
+    browsingHistory: [{ type: Schema.Types.ObjectId, ref: "Product" }],
     ResetPasswordToken: {
       type: String,
     },

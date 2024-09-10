@@ -2,6 +2,10 @@ import { NextFunction, Request, Response } from "express";
 import catchAsync from "../middleware/catchasync.middleware";
 import { Product } from "../model/product.model";
 import Errorhandler from "../util/Errorhandler.util";
+import usermodel from "../model/usermodel";
+import { reqwithuser } from "../middleware/auth.middleware";
+import { Schema } from "mongoose";
+import mongoose from "mongoose";
 class ProductController {
   public static async create(req: Request, res: Response, next: NextFunction) {
     try {
@@ -116,6 +120,32 @@ class ProductController {
       }
       res.status(200).json({
         message: "product deleted successfully",
+      });
+    } catch (error) {
+      next();
+    }
+  }
+  public static async cart(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { productId, variantId } = req.params;
+      const { quantity } = req.body;
+      const user = await usermodel.findById(req.user?._id);
+      if (!user) {
+        return next(new Errorhandler(404, "User not found "));
+      }
+      user.cart.push({
+        productId: productId as unknown as Schema.Types.ObjectId,
+        variantId: variantId as unknown as Schema.Types.ObjectId,
+        quantity,
+      });
+      await user.save();
+      res.status(200).json({
+        message: "Added to cart successfully",
+        user,
       });
     } catch (error) {
       next();

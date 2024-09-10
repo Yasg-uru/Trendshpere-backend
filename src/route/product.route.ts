@@ -20,5 +20,11 @@ productRouter.delete(
   authorization(["admin"]),
   ProductController.update
 );
+productRouter.post(
+  "/addcart/:productId/:variantId",
+  isAuthenticated,
+  //   authorization(["user"]),
+  ProductController.cart
+);
 
 export default productRouter;

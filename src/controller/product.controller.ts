@@ -104,7 +104,21 @@ class ProductController {
       });
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ message: "Server error" });
+      next();
+    }
+  }
+  public static async delete(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { productId } = req.params;
+      const product = await Product.findById(productId);
+      if (!product) {
+        return next(new Errorhandler(404, "Product Not found"));
+      }
+      res.status(200).json({
+        message: "product deleted successfully",
+      });
+    } catch (error) {
+      next();
     }
   }
 }

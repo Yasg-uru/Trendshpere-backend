@@ -175,5 +175,35 @@ class ProductController {
       next();
     }
   }
+  public static async categories(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const categories = await Product.aggregate([
+        {
+          $group: {
+            _id: null,
+            uniqueCategories: { $addToSet: "$category" }, // Collecting unique categories
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            categories: "$uniqueCategories", // Rename 'uniqueCategories' to 'categories'
+          },
+        },
+      ]);
+  
+      res.status(200).json({
+        message: "Fetched categories successfully",
+        categories: categories.length > 0 ? categories[0].categories : [],
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+  
 }
 export default ProductController;

@@ -32,5 +32,6 @@ productRouter.delete(
   //   authorization(["user"]),
   ProductController.removecart
 );
+productRouter.get("/categories",ProductController.categories);
 
 export default productRouter;

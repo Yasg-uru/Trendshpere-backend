@@ -55,5 +55,57 @@ class ProductController {
       return res.status(500).json({ message: "Server error" });
     }
   }
+  public static async update(req: Request, res: Response, next: NextFunction) {
+    try {
+      const productId = req.params.id;
+      const {
+        name,
+        category,
+        description,
+        basePrice,
+        materials,
+        sustainabilityRating,
+        available,
+        brand,
+        defaultImage,
+        variants,
+        discount,
+      } = req.body;
+
+      // Find the product by ID
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      // Update the product fields
+      if (name !== undefined) product.name = name;
+      if (category !== undefined) product.category = category;
+      if (description !== undefined) product.description = description;
+      if (basePrice !== undefined) product.basePrice = basePrice;
+      if (materials !== undefined) product.materials = materials;
+      if (sustainabilityRating !== undefined)
+        product.sustainabilityRating = sustainabilityRating;
+      if (available !== undefined) product.available = available;
+      if (brand !== undefined) product.brand = brand;
+      if (defaultImage !== undefined) product.defaultImage = defaultImage;
+      if (variants !== undefined) {
+        product.variants = variants; // Handle updating of variants
+        product.calculateOverallStock(); // Recalculate stock after updating variants
+      }
+      if (discount !== undefined) product.discount = discount;
+
+      // Save the updated product
+      const updatedProduct = await product.save();
+
+      return res.status(200).json({
+        message: "Product updated successfully",
+        product: updatedProduct,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Server error" });
+    }
+  }
 }
 export default ProductController;

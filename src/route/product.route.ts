@@ -39,5 +39,6 @@ productRouter.post("/review/:productId",upload.array("images"),
 isAuthenticated,
 ProductController.AddRating);
 productRouter.get("/search",ProductController.searchProduct);
+productRouter.get("/filters",ProductController.Filter);
 
 export default productRouter;

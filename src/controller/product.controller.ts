@@ -8,6 +8,7 @@ import { Schema, Types } from "mongoose";
 import mongoose from "mongoose";
 import UploadOnCloudinary from "../util/cloudinary.util";
 import productService from "../services/product.service";
+import { MongoMissingDependencyError } from "mongodb";
 class ProductController {
   public static async create(req: Request, res: Response, next: NextFunction) {
     try {
@@ -291,13 +292,80 @@ class ProductController {
         $text: { $search: searchQuery.toString() },
       }).exec();
       res.status(200).json({
-        success:true ,
-        message :"fetched your searched results",
-        products
-      })
+        success: true,
+        message: "fetched your searched results",
+        products,
+      });
     } catch (error) {
       next();
+    }
+  }
 
+  public static async Filter(req: Request, res: Response, next: NextFunction) {
+    try {
+      const {
+        category,
+        discount,
+        minPrice,
+        maxPrice,
+        available,
+        brands,
+        colors,
+        sizes,
+        minRating,
+        materials,
+      } = req.query;
+
+      const filters: any = {};
+console.log("query",req.query)
+      // Convert query parameters to arrays if they are comma-separated
+      if (category) {
+        filters.category = { $in: (category as string).split(",") };
+      }
+      if (discount === "true") {
+        filters.discount = { $exists: true }; // Corrected from $exist to $exists
+      }
+      if (materials) {
+        filters.materials = { $in: (materials as string).split(",") };
+      }
+      if (colors) {
+        filters["variants.color"] = { $in: (colors as string).split(",") };
+      }
+      if (sizes) {
+        filters["variants.size"] = { $in: (sizes as string).split(",") };
+      }
+      if (brands) {
+        filters.brands = { $in: (brands as string).split(",") };
+      }
+      if (minRating) {
+        filters.rating = { $gte: Number(minRating) };
+      }
+      if (available === "true") {
+        filters.available = true;
+      }
+
+      if (minPrice || maxPrice) {
+        filters.basePrice = {};
+        if (minPrice) {
+          filters.basePrice.$gte = Number(minPrice);
+        }
+        if (maxPrice) {
+          filters.basePrice.$lte = Number(maxPrice);
+        }
+      }
+
+      // Fetch products based on filters
+      const products = await Product.find(filters);
+
+      // Send response
+      res.status(200).json({
+        message: "Applied Filters successfully",
+        products,
+      });
+    } catch (error) {
+      // Handle error
+      console.error("Error filtering products:", error);
+      next();
     }
   }
 }

@@ -1,6 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import catchAsync from "../middleware/catchasync.middleware";
-import { IProductReview, IReviewImage, Product } from "../model/product.model";
+import {
+  IProductReview,
+  IReviewImage,
+  Product,
+  ProductDiscount,
+} from "../model/product.model";
 import Errorhandler from "../util/Errorhandler.util";
 import usermodel from "../model/usermodel";
 import { reqwithuser } from "../middleware/auth.middleware";
@@ -317,7 +322,7 @@ class ProductController {
       } = req.query;
 
       const filters: any = {};
-console.log("query",req.query)
+      console.log("query", req.query);
       // Convert query parameters to arrays if they are comma-separated
       if (category) {
         filters.category = { $in: (category as string).split(",") };
@@ -365,6 +370,99 @@ console.log("query",req.query)
     } catch (error) {
       // Handle error
       console.error("Error filtering products:", error);
+      next();
+    }
+  }
+  public static async createDiscount(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { productId } = req.params;
+      const product = await Product.findById(productId);
+      if (!product) {
+        return next(new Errorhandler(404, "Product not found "));
+      }
+      if (product.discount) {
+        return next(
+          new Errorhandler(
+            400,
+            "Already Discount is Exist for this product,You can update this product discount"
+          )
+        );
+      }
+      const { discountPercentage, validFrom, validUntil } = req.body;
+      const Discount = new ProductDiscount({
+        discountPercentage,
+        validFrom,
+        validUntil,
+      });
+      // await Discount.save();
+
+      product.discount = Discount;
+      await product.save();
+      res.status(201).json({
+        message: "Created Discount to the product successfully",
+        Discount,
+        product,
+      });
+    } catch (error) {
+      next();
+    }
+  }
+  public static async updateDiscount(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { discountId, productId } = req.params;
+      const { discountPercentage, validFrom, validUntil } = req.body;
+      const product = await Product.findById(productId);
+      if (!product) {
+        return next(new Errorhandler(404, "product Not found "));
+      }
+      if (!product.discount) {
+        return next(
+          new Errorhandler(
+            400,
+            "You can't update discount because discount is't exist"
+          )
+        );
+      }
+      //after that we need to find the discount and update the neccessary details that user wants
+
+      product.discount.discountPercentage =
+        discountPercentage || product.discount.discountPercentage;
+      product.discount.validUntil = validUntil || product.discount.validUntil;
+      await product.save();
+      res.status(200).json({
+        message: "Product discount updpated successfully",
+        product,
+      });
+    } catch (error) {
+      next();
+    }
+  }
+  public static async removeDiscount(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { productId } = req.body;
+      const product = await Product.findById(productId);
+      if (!product) {
+        return next(new Errorhandler(404, "Product Not found"));
+      }
+      product.discount = undefined;
+      await product.save();
+      res.status(200).json({
+        message: "Removed Discount successfully from the product",
+        product,
+      });
+    } catch (error) {
       next();
     }
   }

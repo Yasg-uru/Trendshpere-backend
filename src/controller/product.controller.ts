@@ -212,37 +212,46 @@ class ProductController {
     next: NextFunction
   ) {
     try {
-      const customerId = req.user?._id as Schema.Types.ObjectId;
-      // const customerId ="66e0139e7f59c516d80a3283" as unknown as Schema.Types.ObjectId;
+      // const customerId = req.user?._id as Schema.Types.ObjectId;
+      const customerId =
+        "66e0139e7f59c516d80a3283" as unknown as Schema.Types.ObjectId;
       const { comment, rating } = req.body;
       const { productId } = req.params;
       const product = await Product.findById(productId);
+
       console.log("this is a files req.files,", req.files);
       console.log("this is a files req.body,", req.body);
+
       if (!product) {
         return next(new Errorhandler(404, "Product not found"));
       }
-      if (req.files === undefined || !req.files) {
-        return next(new Errorhandler(404, "images is required"));
+
+      if (!req.files || !Array.isArray(req.files)) {
+        return next(new Errorhandler(400, "Images are required"));
       }
-      const uploader = async (path: string) => await UploadOnCloudinary(path);
-      if (!Array.isArray(req.files)) {
-        return next(new Errorhandler(404, "images is required"));
-      }
-      const images: IReviewImage[] = [];
-      req.files.forEach(async (file, index) => {
-        const { buffer } = file;
-        const result = await uploader(
-          `data:image/png;base64,${buffer.toString("base64")}`
-        );
-        images.push({
-          url: result?.secure_url ? result.secure_url : "",
-          description: req.body[`description[${index}]`]
-            ? req.body[`description[${index}]`]
-            : "",
-          createdAt: new Date(),
-        });
-      });
+
+      const uploader = async (file: Express.Multer.File) =>
+        await UploadOnCloudinary(file.path);
+
+      const imagePromises = (req.files as Express.Multer.File[]).map(
+        async (file, index) => {
+          try {
+            const result = await uploader(file);
+            return {
+              url: result?.secure_url || "",
+              description: req.body[`description[${index}]`] || "",
+              createdAt: new Date(),
+            };
+          } catch (error) {
+            console.error(`Error uploading file ${file.originalname}:`, error);
+            return null;
+          }
+        }
+      );
+
+      // Wait for all images to be processed
+      const images = (await Promise.all(imagePromises)).filter(Boolean);
+
       product.reviews.push({
         customerId,
         comment,
@@ -250,7 +259,9 @@ class ProductController {
         images,
         createdAt: new Date(),
       } as IProductReview);
+
       await product.save();
+
       const calculatedAverageRating = productService.calculateAverage(
         product.reviews
       );
@@ -261,7 +272,10 @@ class ProductController {
         message: "Your comment added successfully",
         product,
       });
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error in AddRating:", error);
+      next(new Errorhandler(500, "Internal Server Error"));
+    }
   }
 }
 export default ProductController;

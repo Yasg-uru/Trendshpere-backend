@@ -34,5 +34,7 @@ productRouter.delete(
   ProductController.removecart
 );
 productRouter.get("/categories",ProductController.categories);
-productRouter.post("/review/:productId",upload.array("images"),isAuthenticated,ProductController.AddRating);
+productRouter.post("/review/:productId",upload.array("images"),
+// isAuthenticated,
+ProductController.AddRating);
 export default productRouter;

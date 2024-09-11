@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authorization, isAuthenticated } from "../middleware/auth.middleware";
 import ProductController from "../controller/product.controller";
 import upload from "../middleware/multer.middleware";
+import { ProductReview } from "../model/product.model";
 const productRouter = Router();
 productRouter.post(
   "/create",
@@ -35,6 +36,8 @@ productRouter.delete(
 );
 productRouter.get("/categories",ProductController.categories);
 productRouter.post("/review/:productId",upload.array("images"),
-// isAuthenticated,
+isAuthenticated,
 ProductController.AddRating);
+productRouter.get("/search",ProductController.searchProduct);
+
 export default productRouter;

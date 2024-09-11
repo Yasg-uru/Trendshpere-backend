@@ -17,25 +17,17 @@ interface IProduct extends Document {
   rating: number; // Average rating for the product
   discount?: IProductDiscount; // Optional discount structure
   calculateOverallStock: () => void;
-  //   specificDetails?: IProductDetails;
 }
-// interface IProductDetails extends Document {
-//   lapelType?: string; // Notched, Peak, Shawl, etc.
-//   buttonStyle?: string; // Single-breasted, Double-breasted, etc.
-//   liningMaterial?: string; // Satin, Polyester, etc.
-//   pocketDetails?: string; // Pocket style or number of pockets
-//   ventStyle?: string; // Single, Double, or None
-// }
-// Interface for Product Variants
+
 interface IProductVariant extends Document {
-  size: string; // Variant size, e.g., S, M, L, XL
-  color: string; // Variant color, e.g., Red, Blue, Black
-  material: string; // Material specific to the variant, e.g., Cotton
-  price: number; // Price of the specific variant (can differ from base price)
-  stock: number; // Stock availability for this variant
-  sku: string; // Unique SKU for this specific variant
-  images: string[]; // Array of images for the variant
-  available: boolean; // Availability for the specific variant
+  size: string;
+  color: string;
+  material: string;
+  price: number;
+  stock: number;
+  sku: string;
+  images: string[];
+  available: boolean;
 }
 
 // Interface for Customer Reviews
@@ -128,6 +120,13 @@ productSchema.methods.isProductAvailable = function () {
   // A product is available if any of its variants are available
   return this.variants.some((variant: IProductVariant) => variant.available);
 };
+productSchema.index({
+  name: "text",
+  description: "text",
+  category: "text",
+  brand: "text",
+  tags: "text",
+});
 
 // Models
 export const Product = mongoose.model<IProduct>("Product", productSchema);

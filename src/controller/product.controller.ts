@@ -277,5 +277,29 @@ class ProductController {
       next(new Errorhandler(500, "Internal Server Error"));
     }
   }
+  public static async searchProduct(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { searchQuery } = req.query;
+      if (!searchQuery) {
+        return next(new Errorhandler(404, "please enter query"));
+      }
+      const products = await Product.find({
+        $text: { $search: searchQuery.toString() },
+      }).exec();
+      res.status(200).json({
+        success:true ,
+        message :"fetched your searched results",
+        products
+      })
+    } catch (error) {
+      next();
+
+    }
+  }
 }
+
 export default ProductController;

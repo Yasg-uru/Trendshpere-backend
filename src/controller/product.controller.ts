@@ -436,6 +436,7 @@ class ProductController {
       product.discount.discountPercentage =
         discountPercentage || product.discount.discountPercentage;
       product.discount.validUntil = validUntil || product.discount.validUntil;
+      product.discount.validFrom = validFrom || product.discount.validFrom;
       await product.save();
       res.status(200).json({
         message: "Product discount updpated successfully",
@@ -451,7 +452,7 @@ class ProductController {
     next: NextFunction
   ) {
     try {
-      const { productId } = req.body;
+      const { productId } = req.params;
       const product = await Product.findById(productId);
       if (!product) {
         return next(new Errorhandler(404, "Product Not found"));

@@ -16,6 +16,7 @@ interface IProduct extends Document {
   reviews: IProductReview[]; // Customer reviews
   rating: number; // Average rating for the product
   discount?: IProductDiscount; // Optional discount structure
+  loyalityPoints:number;
   calculateOverallStock: () => void;
 }
 
@@ -90,7 +91,7 @@ const productVariantSchema: Schema = new Schema({
 });
 
 // Main Product Schema
-const productSchema: Schema = new Schema({
+const productSchema: Schema = new Schema<IProduct>({
   name: { type: String, required: true },
   category: { type: String, required: true },
   description: { type: String, required: true },
@@ -105,6 +106,13 @@ const productSchema: Schema = new Schema({
   reviews: [productReviewSchema], // Array of customer reviews
   rating: { type: Number, min: 0, max: 5, default: 0 }, // Average product rating
   discount: { type: productDiscountSchema }, // Optional discount schema
+  loyalityPoints:{
+    type:Number ,
+    default:0,
+   
+
+  }
+  
 });
 
 // Functionality for calculating overall stock from variants

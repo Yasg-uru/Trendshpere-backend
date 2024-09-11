@@ -1,11 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import catchAsync from "../middleware/catchasync.middleware";
-import { Product } from "../model/product.model";
+import { IProductReview, IReviewImage, Product } from "../model/product.model";
 import Errorhandler from "../util/Errorhandler.util";
 import usermodel from "../model/usermodel";
 import { reqwithuser } from "../middleware/auth.middleware";
-import { Schema } from "mongoose";
+import { Schema, Types } from "mongoose";
 import mongoose from "mongoose";
+import UploadOnCloudinary from "../util/cloudinary.util";
 class ProductController {
   public static async create(req: Request, res: Response, next: NextFunction) {
     try {
@@ -195,7 +196,7 @@ class ProductController {
           },
         },
       ]);
-  
+
       res.status(200).json({
         message: "Fetched categories successfully",
         categories: categories.length > 0 ? categories[0].categories : [],
@@ -204,6 +205,56 @@ class ProductController {
       next(error);
     }
   }
-  
+  public static async AddRating(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const customerId = req.user?._id as Schema.Types.ObjectId;
+      // const customerId ="66e0139e7f59c516d80a3283" as unknown as Schema.Types.ObjectId;
+      const { comment, rating } = req.body;
+      const { productId } = req.params;
+      const product = await Product.findById(productId);
+      console.log("this is a files req.files,", req.files);
+      console.log("this is a files req.body,", req.body);
+      if (!product) {
+        return next(new Errorhandler(404, "Product not found"));
+      }
+      if (req.files === undefined || !req.files) {
+        return next(new Errorhandler(404, "images is required"));
+      }
+      const uploader = async (path: string) => await UploadOnCloudinary(path);
+      if (!Array.isArray(req.files)) {
+        return next(new Errorhandler(404, "images is required"));
+      }
+      const images: IReviewImage[] = [];
+      req.files.forEach(async (file, index) => {
+        const { buffer } = file;
+        const result = await uploader(
+          `data:image/png;base64,${buffer.toString("base64")}`
+        );
+        images.push({
+          url: result?.secure_url ? result.secure_url : "",
+          description: req.body[`description[${index}]`]
+            ? req.body[`description[${index}]`]
+            : "",
+          createdAt: new Date(),
+        });
+      });
+      product.reviews.push({
+        customerId,
+        comment,
+        rating,
+        images,
+        createdAt: new Date(),
+      } as IProductReview);
+      await product.save();
+      res.status(200).json({
+        message: "Your comment added successfully",
+        product,
+      });
+    } catch (error) {}
+  }
 }
 export default ProductController;

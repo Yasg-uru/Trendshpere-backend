@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authorization, isAuthenticated } from "../middleware/auth.middleware";
 import ProductController from "../controller/product.controller";
+import upload from "../middleware/multer.middleware";
 const productRouter = Router();
 productRouter.post(
   "/create",
@@ -33,5 +34,5 @@ productRouter.delete(
   ProductController.removecart
 );
 productRouter.get("/categories",ProductController.categories);
-
+productRouter.post("/review/:productId",upload.array("images"),isAuthenticated,ProductController.AddRating);
 export default productRouter;

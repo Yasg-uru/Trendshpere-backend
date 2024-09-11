@@ -39,11 +39,19 @@ interface IProductVariant extends Document {
 }
 
 // Interface for Customer Reviews
-interface IProductReview extends Document {
+export interface IProductReview extends Document {
   customerId: Schema.Types.ObjectId; // Reference to the customer who left the review
   comment: string; // Review comment
   rating: number; // Rating given (out of 5)
   createdAt: Date; // Date when the review was written
+  images: IReviewImage[];
+  helpfulCount: number;
+  isVerifiedPurchase: boolean;
+}
+export interface IReviewImage {
+  url: string;
+  description: string;
+  createdAt: Date;
 }
 
 // Interface for Discounts
@@ -52,13 +60,22 @@ interface IProductDiscount extends Document {
   validFrom: Date; // Date when the discount starts
   validUntil: Date; // Date when the discount ends
 }
-
+const ReviewImageSchema: Schema<IReviewImage> = new Schema<IReviewImage>({
+  url: { type: String, required: true },
+  description: {
+    type: String,
+  },
+  createdAt: { type: Date, default: Date.now() },
+});
 // Schema for Product Reviews
-const productReviewSchema: Schema = new Schema({
-  customerId: { type: Schema.Types.ObjectId, ref: "Customer", required: true },
+const productReviewSchema: Schema = new Schema<IProductReview>({
+  customerId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   comment: { type: String, required: true },
   rating: { type: Number, min: 0, max: 5, required: true },
-  createdAt: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: Date.now() },
+  helpfulCount: { type: Number, default: 0 },
+  isVerifiedPurchase: { type: Boolean, default: false },
+  images: [ReviewImageSchema],
 });
 
 // Schema for Product Discount

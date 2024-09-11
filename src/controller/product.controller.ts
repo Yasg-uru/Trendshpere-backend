@@ -7,6 +7,7 @@ import { reqwithuser } from "../middleware/auth.middleware";
 import { Schema, Types } from "mongoose";
 import mongoose from "mongoose";
 import UploadOnCloudinary from "../util/cloudinary.util";
+import productService from "../services/product.service";
 class ProductController {
   public static async create(req: Request, res: Response, next: NextFunction) {
     try {
@@ -250,6 +251,12 @@ class ProductController {
         createdAt: new Date(),
       } as IProductReview);
       await product.save();
+      const calculatedAverageRating = productService.calculateAverage(
+        product.reviews
+      );
+      product.rating = calculatedAverageRating;
+      await product.save();
+
       res.status(200).json({
         message: "Your comment added successfully",
         product,

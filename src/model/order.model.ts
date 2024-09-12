@@ -30,6 +30,8 @@ export interface IOrder extends Document {
     paymentStatus: "pending" | "completed" | "failed" | "refunded";
     paymentDate?: Date; // Date of successful payment
   };
+  cancellationDate:Date;
+  cancelReason:string;
   orderStatus:
     | "pending"
     | "processing"
@@ -114,6 +116,8 @@ const orderSchema: Schema = new Schema<IOrder>(
       },
       paymentDate: { type: Date },
     },
+    cancelReason:{type:String},
+    cancellationDate:{type:Date},
     orderStatus: {
       type: String,
       enum: [

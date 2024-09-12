@@ -5,6 +5,7 @@ import crypto from "crypto";
 
 import Ordermodel from "../model/order.model";
 import Razorpay from "razorpay";
+import { Product } from "../model/product.model";
 const razorpay = new Razorpay({
   key_id: "rzp_live_tK7jKIBkQuTeH7",
   key_secret: "d3q0tkLxfFVKoizPqeboYYsm",
@@ -179,5 +180,94 @@ export const VerifyPayment = async (
     return next(
       new Errorhandler(500, "An Error occured while verifying payment")
     );
+  }
+};
+export const cancelOrder = async (
+  req: reqwithuser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { OrderId, cancelReason } = req.body;
+    const userId = req.user?._id;
+    const order = await Ordermodel.findById(OrderId).populate(
+      "products.product products.variant"
+    );
+    if (!order) {
+      return next(new Errorhandler(404, "Order not found "));
+    }
+    if (order.user.toString() !== userId) {
+      return next(new Errorhandler(400, "Unauthorized Access"));
+    }
+    if (order.orderStatus === "shipped" || order.orderStatus === "delivered") {
+      return next(
+        new Errorhandler(
+          400,
+          "Order cannot be canceled after shipping or delivery"
+        )
+      );
+    }
+    order.orderStatus = "cancelled";
+    order.cancelReason = cancelReason;
+    order.cancellationDate = new Date();
+    order.products.forEach(async (item) => {
+      const product = await Product.findById(item.productId);
+      if (product) {
+        const variant = product.variants.find(
+          (variant) =>
+            (variant._id as string).toString() === item.variantId.toString()
+        );
+        if (variant) {
+          variant.stock += item.quantity;
+          await product.save();
+        }
+      }
+    });
+    if (order.payment.paymentStatus === "completed") {
+      const refund = await refundPayment(
+        order.payment.paymentId,
+        order.totalAmount
+      );
+      if (refund.success) {
+        return next(new Errorhandler(400, "Refund Failed"));
+      }
+      order.payment.paymentStatus = "refunded";
+      order.refund = {
+        requested: true,
+        amount: order.totalAmount,
+        status: "completed",
+        requestDate: new Date(),
+        completionDate: new Date(),
+      };
+      await order.save();
+    }
+    res.status(200).json({
+      message: "Order Canceled Successfully",
+      order,
+    });
+  } catch (error) {
+    return next(new Errorhandler(500, "Something went wrong"));
+  }
+};
+
+export const refundPayment = async (paymentId: string, TotalAmount: number) => {
+  try {
+    const refund = await razorpay.payments.refund(paymentId, {
+      amount: TotalAmount * 100, // Razorpay accepts amount in paise (1 INR = 100 paise)
+      speed: "normal", // Optional, can be "fast" or "normal"
+      notes: {
+        reason: "Order cancellation refund",
+      },
+    });
+    return {
+      success: true,
+      data: refund,
+    };
+  } catch (error) {
+    console.log("Razorpay Error in refund:", error);
+    return {
+      success: false,
+      error: error,
+    };
   }
 };

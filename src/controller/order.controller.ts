@@ -170,7 +170,22 @@ export const VerifyPayment = async (
       description: "Payment successfully verified.",
     });
     order.save();
+    await Promise.all(
+      order.products.map(async (item) => {
+        const product = await Product.findById(item.productId);
+        if (product) {
+          const variant = product.variants.find(
+            (variant) =>
+              (variant._id as string).toString() === item.variantId.toString()
+          );
 
+          if (variant) {
+            variant.stock -= item.quantity;
+            await product.save();
+          }
+        }
+      })
+    );
     res.status(200).json({
       success: true,
       message: "Payment successfully verified and order updated.",
@@ -210,19 +225,21 @@ export const cancelOrder = async (
     order.orderStatus = "cancelled";
     order.cancelReason = cancelReason;
     order.cancellationDate = new Date();
-    order.products.forEach(async (item) => {
-      const product = await Product.findById(item.productId);
-      if (product) {
-        const variant = product.variants.find(
-          (variant) =>
-            (variant._id as string).toString() === item.variantId.toString()
-        );
-        if (variant) {
-          variant.stock += item.quantity;
-          await product.save();
+    await Promise.all(
+      order.products.map(async (item) => {
+        const product = await Product.findById(item.productId);
+        if (product) {
+          const variant = product.variants.find(
+            (variant) =>
+              (variant._id as string).toString() === item.variantId.toString()
+          );
+          if (variant) {
+            variant.stock += item.quantity;
+            await product.save();
+          }
         }
-      }
-    });
+      })
+    );
     if (order.payment.paymentStatus === "completed") {
       const refund = await refundPayment(
         order.payment.paymentId,

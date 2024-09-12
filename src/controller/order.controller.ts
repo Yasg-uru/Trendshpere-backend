@@ -256,6 +256,14 @@ export const cancelOrder = async (
         requestDate: new Date(),
         completionDate: new Date(),
       };
+      order.auditLog.push({
+        action: "order_cancelled",
+        actor: order.user, // Assuming `userId` holds the ID of the user performing the action
+        timestamp: new Date(),
+        description:
+          "Order has been cancelled due to the following reason: " +
+          cancelReason,
+      });
       await order.save();
     }
     res.status(200).json({

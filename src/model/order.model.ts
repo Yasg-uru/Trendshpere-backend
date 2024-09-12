@@ -8,30 +8,20 @@ export interface IOrder extends Document {
     quantity: number;
     priceAtPurchase: number; // Price per item at the time of order
     discount: number; // Discount applied on the product, if any
+    discountByCoupon: number;
   }[];
   totalAmount: number; // Total amount for the order (before discounts, taxes)
   discountAmount?: number; // Total discount applied to the order
   couponCode?: string; // Applied coupon code
   taxAmount?: number; // Tax applied to the total order amount
   finalAmount: number; // Final amount after applying discounts and taxes
-  shippingDetails: {
-    method: string; // Shipping method (e.g., Standard, Express)
-    cost: number; // Shipping cost
-    address: {
-      street: string;
-      city: string;
-      state: string;
-      country: string;
-      postalCode: string;
-    };
-    estimatedDelivery: Date; // Estimated delivery date
-    trackingNumber?: string; // Tracking number from the shipping provider
-    status?:
-      | "pending"
-      | "shipped"
-      | "in-transit"
-      | "out-for-delivery"
-      | "delivered";
+
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    country: string;
+    postalCode: string;
   };
   payment: {
     paymentId: string; // Payment provider ID (e.g., Razorpay, Stripe)
@@ -69,16 +59,16 @@ export interface IOrder extends Document {
     timestamp: Date;
     description?: string; // Detailed description of the action
   }[];
-  affiliateDetails?: {
-    affiliateId: Schema.Types.ObjectId; // Reference to the affiliate
-    commissionAmount: number; // Commission for the affiliate
-  };
+  // affiliateDetails?: {
+  //   affiliateId: Schema.Types.ObjectId; // Reference to the affiliate
+  //   commissionAmount: number; // Commission for the affiliate
+  // };
   loyaltyPointsUsed?: number; // Loyalty points applied to this order
   isGiftOrder?: boolean; // Whether this order is marked as a gift
   giftMessage?: string; // Personalized message for gift orders
 }
 
-const orderSchema: Schema = new Schema(
+const orderSchema: Schema = new Schema<IOrder>(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     products: [
@@ -96,6 +86,7 @@ const orderSchema: Schema = new Schema(
         quantity: { type: Number, required: true },
         priceAtPurchase: { type: Number, required: true },
         discount: { type: Number, default: 0 },
+        discountByCoupon: { type: Number, required: true },
       },
     ],
     totalAmount: { type: Number, required: true },
@@ -103,30 +94,15 @@ const orderSchema: Schema = new Schema(
     couponCode: { type: String },
     taxAmount: { type: Number },
     finalAmount: { type: Number, required: true }, // After discounts and taxes
-    shippingDetails: {
-      method: { type: String, required: true },
-      cost: { type: Number, required: true },
-      address: {
-        street: { type: String, required: true },
-        city: { type: String, required: true },
-        state: { type: String, required: true },
-        country: { type: String, required: true },
-        postalCode: { type: String, required: true },
-      },
-      estimatedDelivery: { type: Date },
-      trackingNumber: { type: String },
-      status: {
-        type: String,
-        enum: [
-          "pending",
-          "shipped",
-          "in-transit",
-          "out-for-delivery",
-          "delivered",
-        ],
-        default: "pending",
-      },
+
+    address: {
+      street: { type: String, required: true },
+      city: { type: String, required: true },
+      state: { type: String, required: true },
+      country: { type: String, required: true },
+      postalCode: { type: String, required: true },
     },
+
     payment: {
       paymentId: { type: String, required: true },
       provider: { type: String, required: true },
@@ -176,10 +152,10 @@ const orderSchema: Schema = new Schema(
         description: { type: String },
       },
     ],
-    affiliateDetails: {
-      affiliateId: { type: Schema.Types.ObjectId, ref: "Affiliate" },
-      commissionAmount: { type: Number },
-    },
+    // affiliateDetails: {
+    //   affiliateId: { type: Schema.Types.ObjectId, ref: "Affiliate" },
+    //   commissionAmount: { type: Number },
+    // },
     loyaltyPointsUsed: { type: Number, default: 0 },
     isGiftOrder: { type: Boolean, default: false },
     giftMessage: { type: String },

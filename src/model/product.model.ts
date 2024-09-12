@@ -18,6 +18,8 @@ interface IProduct extends Document {
   discount?: IProductDiscount; // Optional discount structure
   loyalityPoints: number;
   calculateOverallStock: () => void;
+  returnPolicy: IReturnPolicy;
+  replcamentPolicy: IReplacePolicy;
 }
 
 interface IProductVariant extends Document {
@@ -46,6 +48,17 @@ export interface IReviewImage {
   description: string;
   createdAt: Date;
 }
+export interface IReturnPolicy extends Document {
+  eligible: boolean;
+  refundDays: number;
+  terms: string;
+}
+export interface IReplacePolicy extends Document {
+  elgible: boolean;
+  replacementDays: number;
+  terms: string;
+  vaildReason: string[];
+}
 
 // Interface for Discounts
 interface IProductDiscount extends Document {
@@ -53,6 +66,20 @@ interface IProductDiscount extends Document {
   validFrom: Date; // Date when the discount starts
   validUntil: Date; // Date when the discount ends
 }
+const ReturnPolicySchema: Schema = new Schema<IReturnPolicy>({
+  eligible: { type: Boolean, default: false },
+  refundDays: { type: Number, default: 0 },
+  terms: { type: String },
+});
+const ReplacementPolicySchema: Schema = new Schema<IReplacePolicy>({
+  elgible: {
+    type: Boolean,
+    default: false,
+  },
+  replacementDays: { type: Number, default: 0 },
+  terms: { type: String },
+  vaildReason: { type: [String], required: [true, "Valid reason is required"] },
+});
 const ReviewImageSchema: Schema<IReviewImage> = new Schema<IReviewImage>({
   url: { type: String, required: true },
   description: {
@@ -110,6 +137,8 @@ const productSchema: Schema = new Schema<IProduct>({
     type: Number,
     default: 0,
   },
+  returnPolicy: { type: ReturnPolicySchema },
+  replcamentPolicy: { type: ReplacementPolicySchema },
 });
 
 // Functionality for calculating overall stock from variants

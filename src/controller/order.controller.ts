@@ -106,6 +106,23 @@ export const createOrder = async (
     });
 
     await newOrder.save();
+    const paymentGatewayResponse = await razorpay.payments.fetch(
+      razorpayOrder.id
+    );
+
+    // Step 5: Handle payment status
+    if (paymentGatewayResponse.status === "captured") {
+      // Payment successful
+      newOrder.payment.paymentStatus = "completed";
+      newOrder.payment.paymentId = paymentGatewayResponse.id;
+      newOrder.payment.paymentDate = new Date();
+      newOrder.orderStatus = "processing";
+    } else if (paymentGatewayResponse.status === "failed") {
+      // Payment failed (insufficient funds, etc.)
+      newOrder.payment.paymentStatus = "failed";
+      newOrder.orderStatus = "cancelled";
+    }
+    await newOrder.save();
 
     // **Step 3: Respond with Razorpay order details**
     res.status(201).json({
@@ -152,6 +169,7 @@ export const VerifyPayment = async (
       description: "Payment successfully verified.",
     });
     order.save();
+
     res.status(200).json({
       success: true,
       message: "Payment successfully verified and order updated.",

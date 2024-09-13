@@ -159,6 +159,7 @@ class ProductController {
       next();
     }
   }
+
   public static async removecart(
     req: reqwithuser,
     res: Response,
@@ -465,6 +466,69 @@ class ProductController {
       });
     } catch (error) {
       next();
+    }
+  }
+  public static async WishList(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { productId } = req.body;
+      const userId = req.user?._id;
+      const user = await usermodel.findById(userId);
+      if (!user) {
+        return next(new Errorhandler(404, "User not found "));
+      }
+      user.wishlist.push(productId as Schema.Types.ObjectId);
+      await user.save();
+      res.status(200).json({
+        message: "Product Added to your wishlist",
+      });
+    } catch (error) {
+      next();
+    }
+  }
+  public static async removeWishListItem(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { productId } = req.params;
+      const userId = req.user?._id;
+      const user = await usermodel.findById(userId);
+      if (!user) {
+        return next(new Errorhandler(404, "User not found "));
+      }
+      user.wishlist = user.wishlist.filter(
+        (list) => list.toString() !== productId.toString()
+      );
+      await user.save();
+      res.status(200).json({
+        message: "removed product from wishlist",
+      });
+    } catch (error) {
+      next();
+    }
+  }
+  public static async GetWishLists(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const userId = req.user?._id;
+      const user = await usermodel.findById(userId).populate("wishlist");
+      if (!user) {
+        return next(new Errorhandler(404, "User not found "));
+      }
+      res.status(200).json({
+        message: "successfully fetcched your wishlist",
+      });
+    } catch (error) {
+      next();
+      
     }
   }
 }

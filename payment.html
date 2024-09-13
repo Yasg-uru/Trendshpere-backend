@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Razorpay Integration</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  </head>
+  <body>
+    <h1>Razorpay Payment Test</h1>
+    <form id="paymentForm">
+      <label for="products">Enter Product Details:</label>
+      <textarea id="products" rows="4" cols="50">
+    [
+      {
+        "productId": "66e0151a1079486d3aedf756",
+        "variantId": "66e0151a1079486d3aedf757",
+        "quantity": 2,
+        "priceAtPurchase": 500,
+        "discount": 0,
+        "discountByCoupon": 0
+      }
+    ]
+    </textarea
+      >
+
+      <label for="couponCode">Coupon Code:</label>
+      <input type="text" id="couponCode" value="SPRING2024" />
+
+      <label for="address">Shipping Address:</label>
+      <textarea id="address" rows="4" cols="50">
+    {
+      "street": "123 Street",
+      "city": "City",
+      "state": "State",
+      "postalCode": "123456",
+      "country": "India"
+    }
+    </textarea
+      >
+
+      <label for="loyaltyPointsUsed">Loyalty Points Used:</label>
+      <input type="number" id="loyaltyPointsUsed" value="0" />
+
+      <label for="isGiftOrder">Is this a Gift Order?</label>
+      <select id="isGiftOrder">
+        <option value="false">No</option>
+        <option value="true">Yes</option>
+      </select>
+
+      <label for="giftMessage">Gift Message:</label>
+      <textarea id="giftMessage" rows="2" cols="50"></textarea>
+
+      <button type="button" onclick="createOrder()">Proceed to Payment</button>
+    </form>
+
+    <script>
+      async function createOrder() {
+        const products = JSON.parse(document.getElementById("products").value);
+        const couponCode = document.getElementById("couponCode").value;
+        const address = JSON.parse(document.getElementById("address").value);
+        const loyaltyPointsUsed = parseInt(
+          document.getElementById("loyaltyPointsUsed").value
+        );
+        const isGiftOrder =
+          document.getElementById("isGiftOrder").value === "true";
+        const giftMessage = document.getElementById("giftMessage").value;
+
+        // Sample payload for the createOrder API
+        const payload = {
+          products: products,
+          address: address,
+          couponCode: couponCode,
+          loyaltyPointsUsed: loyaltyPointsUsed,
+          isGiftOrder: isGiftOrder,
+          giftMessage: giftMessage,
+        };
+
+        try {
+          // Step 1: Create the order by calling the backend API
+          const response = await fetch("http://localhost:8000/order/create", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            const razorpayOrder = data.razorpayOrder;
+
+            // Step 2: Open Razorpay checkout
+            var options = {
+              key: "rzp_live_tK7jKIBkQuTeH7", // Use your actual Razorpay key
+              amount: razorpayOrder.amount,
+              currency: "INR",
+              name: "Trendsphere",
+              description: "Test Transaction",
+              order_id: razorpayOrder.id, // This order_id is created in the backend
+              handler: function (response) {
+                alert("Payment successful!");
+                console.log("Payment ID:", response.razorpay_payment_id);
+                console.log("Order ID:", response.razorpay_order_id);
+                console.log("Signature:", response.razorpay_signature);
+              },
+              prefill: {
+                name: "Trendsphere",
+                email: "yashpawar12122004@gmail.com",
+                contact: "7999379411",
+              },
+              theme: {
+                color: "#F37254",
+              },
+            };
+
+            var rzp1 = new Razorpay(options);
+            rzp1.open();
+          } else {
+            alert(
+              "Failed to create order. Please check the coupon code and details."
+            );
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          alert("An error occurred while creating the order.");
+        }
+      }
+    </script>
+  </body>
+</html>

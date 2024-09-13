@@ -33,10 +33,11 @@ export const createOrder = async (
   next: NextFunction
 ) => {
   try {
-    const user = req.user?._id;
+    const user = "66e0139e7f59c516d80a3283";
+    // const user = req.user?._id;
     const {
       products,
-      shippingDetails,
+      address,
       couponCode,
       loyaltyPointsUsed,
       isGiftOrder,
@@ -85,7 +86,7 @@ export const createOrder = async (
       couponCode,
       taxAmount,
       finalAmount,
-      shippingDetails,
+      address,
       payment: {
         paymentId: razorpayOrder.id, // Razorpay order ID
         provider: "Razorpay", // Payment provider is Razorpay
@@ -107,23 +108,7 @@ export const createOrder = async (
     });
 
     await newOrder.save();
-    const paymentGatewayResponse = await razorpay.payments.fetch(
-      razorpayOrder.id
-    );
-
-    // Step 5: Handle payment status
-    if (paymentGatewayResponse.status === "captured") {
-      // Payment successful
-      newOrder.payment.paymentStatus = "completed";
-      newOrder.payment.paymentId = paymentGatewayResponse.id;
-      newOrder.payment.paymentDate = new Date();
-      newOrder.orderStatus = "processing";
-    } else if (paymentGatewayResponse.status === "failed") {
-      // Payment failed (insufficient funds, etc.)
-      newOrder.payment.paymentStatus = "failed";
-      newOrder.orderStatus = "cancelled";
-    }
-    await newOrder.save();
+    
 
     // **Step 3: Respond with Razorpay order details**
     res.status(201).json({
@@ -169,6 +154,23 @@ export const VerifyPayment = async (
       timestamp: new Date(),
       description: "Payment successfully verified.",
     });
+    const paymentGatewayResponse = await razorpay.payments.fetch(
+      razorpay_payment_id
+    );
+
+    // Step 5: Handle payment status
+    if (paymentGatewayResponse.status === "captured") {
+      // Payment successful
+      order.payment.paymentStatus = "completed";
+      order.payment.paymentId = paymentGatewayResponse.id;
+      order.payment.paymentDate = new Date();
+      order.orderStatus = "processing";
+    } else if (paymentGatewayResponse.status === "failed") {
+      // Payment failed (insufficient funds, etc.)
+      order.payment.paymentStatus = "failed";
+      order.orderStatus = "cancelled";
+    }
+   
     order.save();
     await Promise.all(
       order.products.map(async (item) => {

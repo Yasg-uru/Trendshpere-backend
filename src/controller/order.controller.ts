@@ -500,7 +500,7 @@ export const updateOrderStatus = async (
   next: NextFunction
 ) => {
   try {
-    const { orderId, status, cancelReason } = req.params;
+    const { orderId, status, cancelReason } = req.body;
     const order = await Ordermodel.findById(orderId);
     if (!order) {
       return next(new Errorhandler(404, "Order not found"));

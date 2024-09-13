@@ -61,5 +61,15 @@ productRouter.delete(
   authorization(["admin"]),
   ProductController.removeDiscount
 );
-
+productRouter.post(
+  "/wishlist/:productId",
+  isAuthenticated,
+  ProductController.WishList
+);
+productRouter.get("/wishlist", isAuthenticated, ProductController.GetWishLists);
+productRouter.delete(
+  "/wishlist/:productId",
+  isAuthenticated,
+  ProductController.removeWishListItem
+);
 export default productRouter;

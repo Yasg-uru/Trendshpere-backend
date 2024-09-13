@@ -500,15 +500,69 @@ export const updateOrderStatus = async (
   next: NextFunction
 ) => {
   try {
-    const { orderId, status } = req.params;
+    const { orderId, status, cancelReason } = req.params;
     const order = await Ordermodel.findById(orderId);
     if (!order) {
       return next(new Errorhandler(404, "Order not found"));
     }
+    if (status === "cancelled") {
+      if (order.orderStatus === "delivered") {
+        return next(
+          new Errorhandler(
+            400,
+            "You can't cancel order because already order is delivered"
+          )
+        );
+      }
+      order.orderStatus = "cancelled";
+      order.cancelReason = cancelReason;
+      order.cancellationDate = new Date();
+      await Promise.all(
+        order.products.map(async (item) => {
+          const product = await Product.findById(item.productId);
+          if (product) {
+            const variant = product.variants.find(
+              (variant) =>
+                (variant._id as string).toString() === item.variantId.toString()
+            );
+            if (variant) {
+              variant.stock += item.quantity;
+              await product.save();
+            }
+          }
+        })
+      );
+      if (order.payment.paymentStatus === "completed") {
+        const refund = await refundPayment(
+          order.payment.paymentId,
+          order.totalAmount
+        );
+        if (refund.success) {
+          return next(new Errorhandler(400, "Refund Failed"));
+        }
+        order.payment.paymentStatus = "refunded";
+        order.refund = {
+          requested: true,
+          amount: order.totalAmount,
+          status: "completed",
+          requestDate: new Date(),
+          completionDate: new Date(),
+        };
+        order.auditLog.push({
+          action: "order_cancelled",
+          actor: order.user, // Assuming `userId` holds the ID of the user performing the action
+          timestamp: new Date(),
+          description:
+            "Order has been cancelled due to the following reason: " +
+            cancelReason,
+        });
+        await order.save();
+      }
+    }
     order.orderStatus = status;
     await order.save();
     res.status(200).json({
-      message: "order status updated successfully",
+      message: `order ${status} successfully`,
       order,
     });
   } catch (error) {

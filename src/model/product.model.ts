@@ -19,7 +19,7 @@ interface IProduct extends Document {
   loyalityPoints: number;
   calculateOverallStock: () => void;
   returnPolicy: IReturnPolicy;
-  replcamentPolicy: IReplacePolicy;
+  replcementPolicy: IReplacePolicy;
 }
 
 interface IProductVariant extends Document {
@@ -138,7 +138,7 @@ const productSchema: Schema = new Schema<IProduct>({
     default: 0,
   },
   returnPolicy: { type: ReturnPolicySchema },
-  replcamentPolicy: { type: ReplacementPolicySchema },
+  replcementPolicy: { type: ReplacementPolicySchema },
 });
 
 // Functionality for calculating overall stock from variants

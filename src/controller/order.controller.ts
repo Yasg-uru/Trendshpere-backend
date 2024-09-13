@@ -296,3 +296,222 @@ export const refundPayment = async (paymentId: string, TotalAmount: number) => {
     };
   }
 };
+// export const replacementItems = async (
+//   req: reqwithuser,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const { orderId, replacmentItems } = req.body;
+//     const userId = req.user?._id;
+//     const order = await Ordermodel.findById(orderId).populate(
+//       "products.product"
+//     );
+//     if (!order) {
+//       return next(new Errorhandler(404, "order not found"));
+//     }
+//     await Promise.all(
+//       replacmentItems.map(async (item) => {
+//         const product = await Product.findById();
+//       })
+//     );
+//   } catch (error) {}
+// };
+
+export const returnPolicy = async (
+  req: reqwithuser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { orderId, returnItems } = req.body;
+    const order = await Ordermodel.findById(orderId);
+    if (!order) {
+      return next(new Errorhandler(404, "order not found "));
+    }
+    let refundAmount: number = 0;
+    await Promise.all(
+      returnItems.map(async (item: any) => {
+        const product = await Product.findById(item.productId);
+        if (product) {
+          if (product.returnPolicy.eligible) {
+            const currentDate = new Date();
+            const purchasedDate = new Date(order.createdAt);
+            const refundDaysAllowed = product.returnPolicy.refundDays;
+            const timeDifference =
+              currentDate.getTime() - purchasedDate.getTime();
+            const daysSincePurchase = timeDifference / (1000 * 3600 * 24);
+            if (daysSincePurchase <= refundDaysAllowed) {
+            }
+            const variant = product.variants.find(
+              (variant) => variant.toString() === item.variantId.toString()
+            );
+            if (variant) {
+              variant.stock += item.quantity;
+              refundAmount +=
+                item.priceAtPurchase * item.quantity -
+                item.discount * item.quantity;
+            }
+          }
+        }
+      })
+    );
+    if (order.payment.paymentStatus === "completed") {
+      const refundResponse = await refundPayment(
+        order.payment.paymentId,
+        refundAmount
+      );
+      if (!refundResponse.success) {
+        return next(new Errorhandler(400, "Refund Failed"));
+      }
+      order.payment.paymentStatus = "refunded";
+      order.refund = {
+        requested: true,
+        amount: refundAmount,
+        status: "completed",
+        requestDate: new Date(),
+        completionDate: new Date(),
+      };
+      order.auditLog.push({
+        action: "return_processed",
+        actor: order.user,
+        timestamp: new Date(),
+        description: `Refund of ₹${refundAmount} processed for returned items.`,
+      });
+      await order.save();
+      res.status(200).json({
+        success: true,
+        message: "Return processed and refund initiated successfully.",
+        refundAmount,
+        order,
+      });
+    }
+  } catch (error) {}
+};
+
+export const FilterOrders = async (
+  req: reqwithuser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Extract filters from query parameters
+    const {
+      status, // Order status
+      productId, // Product ID
+      variantId, // Product Variant ID
+      paymentStatus, // Payment status
+      startDate, // For date range filtering
+      endDate,
+      couponCode, // Coupon used
+      isGiftOrder, // If it's a gift order
+      city, // Address city
+      country, // Address country
+      minTotalAmount, // Minimum order amount
+      maxTotalAmount, // Maximum order amount
+      page = 1, // Pagination: default page 1
+      limit = 10, // Pagination: default limit of 10
+      sortBy = "createdAt", // Sorting field (default: createdAt)
+      order = "desc", // Sorting order (default: descending)
+    } = req.query;
+
+    // Initialize query object for MongoDB
+    const query: any = {};
+    const user = req.user?._id;
+    // Add search conditions dynamically based on query params
+    if (user) query.user = user;
+    if (status) query.orderStatus = status;
+    if (productId) query["products.productId"] = productId;
+    if (variantId) query["products.variantId"] = variantId;
+    if (paymentStatus) query["payment.paymentStatus"] = paymentStatus;
+    if (couponCode) query.couponCode = couponCode;
+    if (isGiftOrder) query.isGiftOrder = isGiftOrder === "true"; // Convert string to boolean
+    if (city) query["address.city"] = city;
+    if (country) query["address.country"] = country;
+
+    // Date range filter
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) query.createdAt.$gte = new Date(startDate as string);
+      if (endDate) query.createdAt.$lte = new Date(endDate as string);
+    }
+
+    // Total amount range filter
+    if (minTotalAmount || maxTotalAmount) {
+      query.totalAmount = {};
+      if (minTotalAmount) query.totalAmount.$gte = Number(minTotalAmount);
+      if (maxTotalAmount) query.totalAmount.$lte = Number(maxTotalAmount);
+    }
+
+    // Pagination and sorting
+    const skip = (Number(page) - 1) * Number(limit);
+    const sortOptions: any = {};
+    sortOptions[sortBy as string] = order === "asc" ? 1 : -1;
+
+    // Execute the search query with pagination and sorting
+    const orders = await Ordermodel.find(query)
+      .skip(skip)
+      .limit(Number(limit))
+      .sort(sortOptions);
+
+    // Count total matching documents (without pagination)
+    const totalOrders = await Ordermodel.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      orders,
+      pagination: {
+        totalOrders,
+        currentPage: Number(page),
+        totalPages: Math.ceil(totalOrders / Number(limit)),
+        limit: Number(limit),
+      },
+    });
+  } catch (error) {
+    next(new Error("Error fetching orders"));
+  }
+};
+export const searchOrders = async (
+  req: reqwithuser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { searchQuery } = req.query;
+    if (!searchQuery) {
+      return next(new Errorhandler(404, "Please Enter query for search"));
+    }
+    const user = req.user?._id;
+    const orders = await Ordermodel.find({
+      user,
+      $text: { $search: searchQuery as string },
+    });
+    res.status(200).json({
+      message: "Searched your orders successfully",
+      orders,
+    });
+  } catch (error) {
+    next();
+  }
+};
+export const updateOrderStatus = async (
+  req: reqwithuser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { orderId, status } = req.params;
+    const order = await Ordermodel.findById(orderId);
+    if (!order) {
+      return next(new Errorhandler(404, "Order not found"));
+    }
+    order.orderStatus = status;
+    await order.save();
+    res.status(200).json({
+      message: "order status updated successfully",
+      order,
+    });
+  } catch (error) {
+    next();
+  }
+};

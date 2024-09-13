@@ -30,24 +30,21 @@ export interface IOrder extends Document {
     paymentStatus: "pending" | "completed" | "failed" | "refunded";
     paymentDate?: Date; // Date of successful payment
   };
-  cancellationDate:Date;
-  cancelReason:string;
-  orderStatus:
-    | "pending"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "returned"
-    | "cancelled";
+  cancellationDate: Date;
+  cancelReason: string;
+  orderStatus: string;
   createdAt: Date;
   updatedAt: Date;
-  returnRequest?: {
+  replacementRequest?: {
+    productId: Schema.Types.ObjectId;
+    variantId: Schema.Types.ObjectId;
+    quantity: number;
     requested: boolean;
     reason?: string;
     status?: "pending" | "approved" | "rejected";
     requestDate?: Date;
     responseDate?: Date;
-  };
+  }[];
   refund?: {
     requested: boolean;
     amount: number;
@@ -116,8 +113,8 @@ const orderSchema: Schema = new Schema<IOrder>(
       },
       paymentDate: { type: Date },
     },
-    cancelReason:{type:String},
-    cancellationDate:{type:Date},
+    cancelReason: { type: String },
+    cancellationDate: { type: Date },
     orderStatus: {
       type: String,
       enum: [
@@ -130,16 +127,21 @@ const orderSchema: Schema = new Schema<IOrder>(
       ],
       default: "pending",
     },
-    returnRequest: {
-      requested: { type: Boolean, default: false },
-      reason: { type: String },
-      status: { type: String, enum: ["pending", "approved", "rejected"] },
-      requestDate: { type: Date },
-      responseDate: { type: Date },
-    },
+    replacementRequest: [
+      {
+        productId: { type: Schema.Types.ObjectId },
+        variantId: { type: Schema.Types.ObjectId },
+        requested: { type: Boolean, default: false },
+        reason: { type: String },
+        status: { type: String, enum: ["pending", "approved", "rejected"] },
+        requestDate: { type: Date },
+        responseDate: { type: Date },
+      },
+    ],
     refund: {
       requested: { type: Boolean, default: false },
       amount: { type: Number },
+
       status: {
         type: String,
         enum: ["pending", "completed", "failed"],
@@ -166,6 +168,12 @@ const orderSchema: Schema = new Schema<IOrder>(
   },
   { timestamps: true }
 );
-
+orderSchema.index({
+  "address.street": "text",
+  "address.city": "text",
+  "address.state": "text",
+  "address.country": "text",
+  giftMessage: "text",
+});
 const Ordermodel = mongoose.model<IOrder>("Order", orderSchema);
 export default Ordermodel;

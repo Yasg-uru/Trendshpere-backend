@@ -108,7 +108,6 @@ export const createOrder = async (
     });
 
     await newOrder.save();
-    
 
     // **Step 3: Respond with Razorpay order details**
     res.status(201).json({
@@ -170,7 +169,7 @@ export const VerifyPayment = async (
       order.payment.paymentStatus = "failed";
       order.orderStatus = "cancelled";
     }
-   
+
     order.save();
     await Promise.all(
       order.products.map(async (item) => {

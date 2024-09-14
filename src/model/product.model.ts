@@ -20,10 +20,13 @@ interface IProduct extends Document {
   calculateOverallStock: () => void;
   returnPolicy: IReturnPolicy;
   replcementPolicy: IReplacePolicy;
+  highlights: string[];
+  hightlights: string[];
+  productDetails: Map<string, string>;
 }
 
 interface IProductVariant extends Document {
-  size: string;
+  size: string[];
   color: string;
   material: string;
   price: number;
@@ -106,8 +109,8 @@ const productDiscountSchema: Schema = new Schema({
 });
 
 // Schema for Product Variants
-const productVariantSchema: Schema = new Schema({
-  size: { type: String, required: true },
+const productVariantSchema: Schema = new Schema<IProductVariant>({
+  size: { type: [String], required: true },
   color: { type: String, required: true },
   material: { type: String, required: true },
   price: { type: Number, required: true },
@@ -133,6 +136,11 @@ const productSchema: Schema = new Schema<IProduct>({
   reviews: [productReviewSchema], // Array of customer reviews
   rating: { type: Number, min: 0, max: 5, default: 0 }, // Average product rating
   discount: { type: productDiscountSchema }, // Optional discount schema
+  highlights: [String],
+  productDetails: {
+    type: Map,
+    of: String,
+  },
   loyalityPoints: {
     type: Number,
     default: 0,

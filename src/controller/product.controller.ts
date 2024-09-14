@@ -29,9 +29,14 @@ class ProductController {
         defaultImage,
         variants,
         discount,
+        highlights,
+        loyalityPoints,
+        returnPolicy,
+        replacementPolicy,
+        productDetails,
       } = req.body;
 
-      // Check if the product already exists (optional)
+      // Check if the product already exists
       const existingProduct = await Product.findOne({ name, category });
       if (existingProduct) {
         return res.status(400).json({ message: "Product already exists" });
@@ -50,6 +55,11 @@ class ProductController {
         defaultImage,
         variants,
         discount,
+        highlights,
+        loyalityPoints,
+        returnPolicy,
+        replcementPolicy: replacementPolicy, // fixed spelling here
+        productDetails: new Map(Object.entries(productDetails)), // Assuming the input is an object
       });
 
       // Calculate overall stock based on variants
@@ -67,6 +77,7 @@ class ProductController {
       return res.status(500).json({ message: "Server error" });
     }
   }
+
   public static async update(req: Request, res: Response, next: NextFunction) {
     try {
       const productId = req.params.id;
@@ -528,7 +539,6 @@ class ProductController {
       });
     } catch (error) {
       next();
-      
     }
   }
 }

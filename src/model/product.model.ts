@@ -26,7 +26,7 @@ interface IProduct extends Document {
 }
 
 interface IProductVariant extends Document {
-  size: string[];
+  size: { size: string; stock: number }[];
   color: string;
   material: string;
   price: number;
@@ -110,7 +110,12 @@ const productDiscountSchema: Schema = new Schema({
 
 // Schema for Product Variants
 const productVariantSchema: Schema = new Schema<IProductVariant>({
-  size: { type: [String], required: true },
+  size: [
+    {
+      size: String,
+      stock: Number,
+    },
+  ],
   color: { type: String, required: true },
   material: { type: String, required: true },
   price: { type: Number, required: true },

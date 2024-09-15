@@ -72,4 +72,5 @@ productRouter.delete(
   isAuthenticated,
   ProductController.removeWishListItem
 );
+productRouter.get("/catgory-unique",ProductController.GetHierarchicalCategories);
 export default productRouter;

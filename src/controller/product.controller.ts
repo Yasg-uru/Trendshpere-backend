@@ -326,6 +326,9 @@ class ProductController {
     try {
       const {
         category,
+        subcategory,
+        childcategory,
+
         discount,
         minPrice,
         maxPrice,
@@ -339,7 +342,9 @@ class ProductController {
 
       const filters: any = {};
       console.log("query", req.query);
-      // Convert query parameters to arrays if they are comma-separated
+
+      if (subcategory) filters.subcategory = subcategory;
+      if (childcategory) filters.childcategory = childcategory;
       if (category) {
         filters.category = { $in: (category as string).split(",") };
       }
@@ -540,6 +545,85 @@ class ProductController {
       }
       res.status(200).json({
         message: "successfully fetcched your wishlist",
+      });
+    } catch (error) {
+      next();
+    }
+  }
+  public static async GetHierarchicalCategories(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const categories = await Product.aggregate([
+        {
+          // Grouping by category
+          $group: {
+            _id: "$category",
+            subcategories: {
+              $addToSet: {
+                subcategory: "$subcategory",
+                childcategory: "$childcategory",
+              },
+            },
+          },
+        },
+        {
+          // Unwind subcategories to group by category and subcategory
+          $unwind: "$subcategories",
+        },
+        {
+          // Grouping by category and subcategory
+          $group: {
+            _id: {
+              category: "$_id",
+              subcategory: "$subcategories.subcategory",
+            },
+            childcategories: {
+              $addToSet: "$subcategories.childcategory",
+            },
+          },
+        },
+        {
+          // Grouping by category
+          $group: {
+            _id: "$_id.category",
+            subcategories: {
+              $addToSet: {
+                subcategory: "$_id.subcategory",
+                childcategories: "$childcategories",
+              },
+            },
+          },
+        },
+        {
+          // Sorting categories alphabetically for consistency
+          $sort: {
+            _id: 1,
+          },
+        },
+        {
+          // Optional projection to format the result neatly
+          $project: {
+            _id: 0,
+            category: "$_id",
+            subcategories: {
+              $map: {
+                input: "$subcategories",
+                as: "subcategory",
+                in: {
+                  subcategory: "$$subcategory.subcategory",
+                  childcategories: "$$subcategory.childcategories",
+                },
+              },
+            },
+          },
+        },
+      ]);
+      res.status(200).json({
+        message: "Fetched successfully your categories in hierarchical format",
+        categories,
       });
     } catch (error) {
       next();

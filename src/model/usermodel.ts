@@ -104,13 +104,7 @@ const userSchema = new Schema<User>(
       enum: ["user", "admin"],
       default: "user",
     },
-    bodyMeasurements: {
-      height: { type: Number, required: true },
-      weight: { type: Number, required: true },
-      chestSize: { type: Number },
-      waistSize: { type: Number },
-      hipSize: { type: Number },
-    },
+    
     preferences: {
       style: { type: String },
       favoriteColors: [{ type: String }],

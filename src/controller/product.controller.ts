@@ -20,6 +20,8 @@ class ProductController {
       const {
         name,
         category,
+        subcategory,
+        childcategory,
         description,
         basePrice,
         materials,
@@ -46,6 +48,8 @@ class ProductController {
       const newProduct = new Product({
         name,
         category,
+        subcategory,
+        childcategory,
         description,
         basePrice,
         materials,

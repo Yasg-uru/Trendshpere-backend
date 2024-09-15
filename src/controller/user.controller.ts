@@ -15,8 +15,7 @@ import catchAsync from "../middleware/catchasync.middleware";
 export const registerUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { username, email, password, preferences, bodyMeasurements } =
-        req.body;
+      const { username, email, password, preferences } = req.body;
       console.log("This is req.body:", req.body);
 
       // Check if the user with the email exists and is verified
@@ -63,12 +62,11 @@ export const registerUser = catchAsync(
           username,
           email,
           password,
-          profileUrl,
+          avatar: profileUrl,
           verifyCode,
           verifyCodeExpiry,
           isVerified: false,
           preferences: preferences || {}, // default empty preferences
-          bodyMeasurements: bodyMeasurements || {}, // default empty measurements
         });
 
         await newUser.save();
@@ -98,7 +96,8 @@ export const verifyuser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { email, code } = req.body;
-      const user: User | null = await usermodel.findOne({ email });
+      console.log("this is a req.body in user verification :", req.body);
+      const user = await usermodel.findOne({ email });
       if (!user) {
         return next(new Errorhandler(404, "user not found with this email"));
       }

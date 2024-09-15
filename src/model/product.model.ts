@@ -4,6 +4,8 @@ import mongoose, { Schema, Document } from "mongoose";
 interface IProduct extends Document {
   name: string;
   category: string; // General product category like 't-shirt', 'pants', etc.
+  subcategory: string;
+  childcategory: string;
   description: string; // Detailed description of the product
   basePrice: number; // Base price for the product before variant-specific adjustments
   materials: string[]; // Array of materials like Cotton, Polyester, etc.
@@ -20,6 +22,7 @@ interface IProduct extends Document {
   calculateOverallStock: () => void;
   returnPolicy: IReturnPolicy;
   replcementPolicy: IReplacePolicy;
+  gender: "mens" | "womens" | "kids" | null;
   highlights: string[];
   hightlights: string[];
   productDetails: Map<string, string>;
@@ -129,6 +132,9 @@ const productVariantSchema: Schema = new Schema<IProductVariant>({
 const productSchema: Schema = new Schema<IProduct>({
   name: { type: String, required: true },
   category: { type: String, required: true },
+  subcategory: { type: String, required: true },
+  childcategory: { type: String, required: true },
+  gender: { type: String, default: null },
   description: { type: String, required: true },
   basePrice: { type: Number, required: true }, // Base price before any variant-specific pricing
   materials: { type: [String], required: true },

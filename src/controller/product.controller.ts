@@ -346,16 +346,16 @@ class ProductController {
       if (subcategory) filters.subcategory = subcategory;
       if (childcategory) filters.childcategory = childcategory;
       if (category) {
-        filters.category = { $in: category  };
+        filters.category = { $in: category };
       }
       if (discount === "true") {
         filters.discount = { $exists: true }; // Corrected from $exist to $exists
       }
       if (materials) {
-        filters.materials = { $in: materials  };
+        filters.materials = { $in: materials };
       }
       if (colors) {
-        filters["variants.color"] = { $in: colors  };
+        filters["variants.color"] = { $in: colors };
       }
       if (sizes) {
         filters["variants.size"] = { $in: sizes };
@@ -364,7 +364,7 @@ class ProductController {
         filters.brands = { $in: brands };
       }
       if (minRating !== "0" && minRating) {
-        filters.rating = { $gte: Number(minRating) };
+        filters.sustainabilityRating = { $gte: Number(minRating) };
       }
       if (available === "true") {
         filters.available = true;

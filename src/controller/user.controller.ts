@@ -139,7 +139,7 @@ export const Login = catchAsync(async (req, res, next) => {
     if (!email || !password) {
       return next(new Errorhandler(404, "Please Enter credentials"));
     }
-    const user = await usermodel.findOne({ email });
+    const user = await usermodel.findOne({ email }).populate("cart.productId cart.variantId");
     if (!user) {
       return next(new Errorhandler(404, "Invalid credentials"));
     }

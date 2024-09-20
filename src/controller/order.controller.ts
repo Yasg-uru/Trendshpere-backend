@@ -6,6 +6,7 @@ import crypto from "crypto";
 import Ordermodel from "../model/order.model";
 import Razorpay from "razorpay";
 import { Product } from "../model/product.model";
+import usermodel from "../model/usermodel";
 const razorpay = new Razorpay({
   key_id: "rzp_live_tK7jKIBkQuTeH7",
   key_secret: "d3q0tkLxfFVKoizPqeboYYsm",
@@ -106,6 +107,11 @@ export const createOrder = async (
         },
       ],
     });
+    const Existinguser = await usermodel.findById(user);
+    if (Existinguser) {
+      Existinguser.address.push({ ...address });
+      await Existinguser.save();
+    }
 
     await newOrder.save();
 

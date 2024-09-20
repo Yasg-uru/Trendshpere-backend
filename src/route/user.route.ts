@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  AddNewAddress,
   forgotPassword,
   GetCarts,
   Login,
@@ -20,6 +21,6 @@ userRouter.post("/logout", Logout);
 userRouter.post("/forgot-password", forgotPassword);
 userRouter.put("/reset-password/:token", Resetpassword);
 userRouter.get("/carts", isAuthenticated, GetCarts);
-
+userRouter.post("/add-address",isAuthenticated,AddNewAddress);
 
 export default userRouter;

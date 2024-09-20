@@ -278,3 +278,25 @@ export const GetCarts = async (
     next(error);
   }
 };
+export const AddNewAddress = async (
+  req: reqwithuser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { address } = req.body;
+    const userId = req.user?._id;
+    const user = await usermodel.findById(userId);
+    if (!user) {
+      return next(new Errorhandler(404, "User not found "));
+    }
+    user.address.push({ ...address });
+    await user.save();
+    res.status(200).json({
+      message: "Successfully added new address",
+      user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -36,7 +36,7 @@ export interface User extends Document {
     quantity: number;
     variantId: Schema.Types.ObjectId;
     size: string;
-    _id?:string;
+    _id?: string;
   }[];
   orderHistory: {
     orderId: Schema.Types.ObjectId;
@@ -54,7 +54,16 @@ export interface User extends Document {
   browsingHistory: Schema.Types.ObjectId[];
   ResetPasswordToken: string | undefined;
   ResetPasswordTokenExpire: Date | undefined;
-
+  address: {
+    name: string;
+    addressLine1: string;
+    addressLine2: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+    phone: string;
+  }[];
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -106,7 +115,20 @@ const userSchema = new Schema<User>(
       enum: ["user", "admin"],
       default: "user",
     },
-
+    address: [
+      {
+        name: {
+          type: String,
+        },
+        addressLine1: { type: String },
+        addressLine2: { type: String },
+        city: { type: String },
+        state: { type: String },
+        postalCode: { type: String },
+        country: { type: String },
+        phone: { type: String },
+      },
+    ],
     preferences: {
       style: { type: String },
       favoriteColors: [{ type: String }],

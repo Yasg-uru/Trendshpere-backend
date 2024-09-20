@@ -33,8 +33,8 @@ export const createOrder = async (
   next: NextFunction
 ) => {
   try {
-    const user = "66e0139e7f59c516d80a3283";
-    // const user = req.user?._id;
+    // const user = "66e0139e7f59c516d80a3283";
+    const user = req.user?._id;
     const {
       products,
       address,

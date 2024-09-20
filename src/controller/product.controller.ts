@@ -155,7 +155,7 @@ class ProductController {
   ) {
     try {
       const { productId, variantId } = req.params;
-      const { quantity } = req.body;
+      const { quantity, size, color } = req.body;
       const user = await usermodel.findById(req.user?._id);
       if (!user) {
         return next(new Errorhandler(404, "User not found "));
@@ -164,6 +164,8 @@ class ProductController {
         productId: productId as unknown as Schema.Types.ObjectId,
         variantId: variantId as unknown as Schema.Types.ObjectId,
         quantity,
+        size,
+        color,
       });
       await user.save();
       res.status(200).json({

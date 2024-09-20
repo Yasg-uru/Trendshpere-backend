@@ -35,6 +35,8 @@ export interface User extends Document {
     productId: Schema.Types.ObjectId;
     quantity: number;
     variantId: Schema.Types.ObjectId;
+    size: string;
+    color: string;
   }[];
   orderHistory: {
     orderId: Schema.Types.ObjectId;
@@ -104,7 +106,7 @@ const userSchema = new Schema<User>(
       enum: ["user", "admin"],
       default: "user",
     },
-    
+
     preferences: {
       style: { type: String },
       favoriteColors: [{ type: String }],
@@ -125,6 +127,14 @@ const userSchema = new Schema<User>(
           type: Schema.Types.ObjectId,
           ref: "ProductVariant",
           required: true,
+        },
+        size: {
+          type: Number,
+          required: [true, "Size is required"],
+        },
+        color: {
+          type: String,
+          required: [true, "color is required"],
         },
       },
     ],

@@ -10,6 +10,7 @@ import {
 } from "../controller/user.controller";
 import upload from "../middleware/multer.middleware";
 import { isAuthenticated } from "../middleware/auth.middleware";
+import ProductController from "../controller/product.controller";
 
 const userRouter = Router();
 userRouter.post("/register", upload.single("avatar"), registerUser);
@@ -18,6 +19,7 @@ userRouter.post("/sign-in", Login);
 userRouter.post("/logout", Logout);
 userRouter.post("/forgot-password", forgotPassword);
 userRouter.put("/reset-password/:token", Resetpassword);
-userRouter.get("/carts",isAuthenticated,GetCarts);
+userRouter.get("/carts", isAuthenticated, GetCarts);
+
 
 export default userRouter;

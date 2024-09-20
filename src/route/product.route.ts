@@ -22,7 +22,7 @@ productRouter.delete(
   authorization(["admin"]),
   ProductController.update
 );
-productRouter.post("/addcarts",isAuthenticated,ProductController.Addcart)
+productRouter.post("/addcarts", isAuthenticated, ProductController.Addcart);
 productRouter.delete(
   "/remove/:productId/:variantId",
   isAuthenticated,
@@ -70,5 +70,10 @@ productRouter.delete(
 productRouter.get(
   "/catgory-unique",
   ProductController.GetHierarchicalCategories
+);
+productRouter.put(
+  "/update-cart",
+  isAuthenticated,
+  ProductController.updateCartQuantity
 );
 export default productRouter;

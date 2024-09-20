@@ -247,16 +247,23 @@ export const GetCarts = async (
     if (!user) {
       return next(new Errorhandler(404, "User not found "));
     }
+
     const carts = user.cart.map((item) => {
       const product = item.productId as unknown as IProduct;
       const variants = product.variants.find(
-        (variant:IProductVariant) => variant._id.toString() === item.variantId.toString()
+        (variant: IProductVariant) =>
+          variant._id.toString() === item.variantId.toString()
       );
       return {
         title: product.name,
+        size: item.size,
+        color: variants?.color,
         quantity: item.quantity,
+        productId: product._id,
+        variantId: variants?._id,
         price: variants?.price,
-        image:variants?.images[0],
+        stocks: variants?.stock,
+        image: variants?.images[0],
         discount: product.discount,
         returnPolicy: product.returnPolicy,
         replacementPolicy: product.replcementPolicy,

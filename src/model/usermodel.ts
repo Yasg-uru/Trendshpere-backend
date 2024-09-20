@@ -36,6 +36,7 @@ export interface User extends Document {
     quantity: number;
     variantId: Schema.Types.ObjectId;
     size: string;
+    _id?:string;
   }[];
   orderHistory: {
     orderId: Schema.Types.ObjectId;

@@ -177,7 +177,6 @@ class ProductController {
       next(error);
     }
   }
-  
 
   public static async removecart(
     req: reqwithuser,
@@ -201,6 +200,37 @@ class ProductController {
       });
     } catch (error) {
       next();
+    }
+  }
+  public static async updateCartQuantity(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { quantity, variantId, productId } = req.body;
+
+      const userId = req.user?._id;
+      const user = await usermodel.findById(userId);
+      if (!user) {
+        return next(new Errorhandler(404, "User not found "));
+      }
+      const cart = user.cart.find(
+        (cart) =>
+          cart.productId.toString() === productId.toString() &&
+          cart.variantId.toString() === variantId.toString()
+      );
+
+      if (cart) {
+        cart.quantity = quantity;
+      }
+      await user.save();
+      res.status(200).json({
+        message: "updated quantity Successfully",
+      });
+    } catch (error) {
+      console.log("this is a error :", error);
+      next(error);
     }
   }
   public static async categories(

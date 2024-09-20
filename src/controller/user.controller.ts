@@ -11,6 +11,7 @@ import sendtoken from "../util/sendtoken";
 import { reqwithuser } from "../middleware/auth.middleware";
 import { Schema, ObjectId } from "mongoose";
 import catchAsync from "../middleware/catchasync.middleware";
+import { IProduct, IProductVariant } from "../model/product.model";
 
 export const registerUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -139,7 +140,9 @@ export const Login = catchAsync(async (req, res, next) => {
     if (!email || !password) {
       return next(new Errorhandler(404, "Please Enter credentials"));
     }
-    const user = await usermodel.findOne({ email }).populate("cart.productId cart.variantId");
+    const user = await usermodel
+      .findOne({ email })
+      .populate("cart.productId cart.variantId");
     if (!user) {
       return next(new Errorhandler(404, "Invalid credentials"));
     }
@@ -233,3 +236,38 @@ export const Resetpassword = catchAsync(
     }
   }
 );
+export const GetCarts = async (
+  req: reqwithuser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req.user?._id;
+    const user = await usermodel.findById(userId).populate("cart.productId");
+    if (!user) {
+      return next(new Errorhandler(404, "User not found "));
+    }
+    const carts = user.cart.map((item) => {
+      const product = item.productId as unknown as IProduct;
+      const variants = product.variants.find(
+        (variant:IProductVariant) => variant._id.toString() === item.variantId.toString()
+      );
+      return {
+        title: product.name,
+        quantity: item.quantity,
+        price: variants?.price,
+        image:variants?.images[0],
+        discount: product.discount,
+        returnPolicy: product.returnPolicy,
+        replacementPolicy: product.replcementPolicy,
+        loyaltyPoints: product.loyalityPoints,
+      };
+    });
+    res.status(200).json({
+      message: "Fetched successfully carts ",
+      carts,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

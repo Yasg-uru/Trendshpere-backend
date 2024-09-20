@@ -36,7 +36,6 @@ export interface User extends Document {
     quantity: number;
     variantId: Schema.Types.ObjectId;
     size: string;
-    color: string;
   }[];
   orderHistory: {
     orderId: Schema.Types.ObjectId;
@@ -129,12 +128,8 @@ const userSchema = new Schema<User>(
           required: true,
         },
         size: {
-          type: Number,
-          required: [true, "Size is required"],
-        },
-        color: {
           type: String,
-          required: [true, "color is required"],
+          // required: [true, "Size is required"],
         },
       },
     ],

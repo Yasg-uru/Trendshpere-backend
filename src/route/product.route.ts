@@ -22,12 +22,7 @@ productRouter.delete(
   authorization(["admin"]),
   ProductController.update
 );
-productRouter.post(
-  "/addcart/:productId/:variantId",
-  isAuthenticated,
-  //   authorization(["user"]),
-  ProductController.cart
-);
+productRouter.post("/addcarts",isAuthenticated,ProductController.Addcart)
 productRouter.delete(
   "/remove/:productId/:variantId",
   isAuthenticated,
@@ -72,5 +67,8 @@ productRouter.delete(
   isAuthenticated,
   ProductController.removeWishListItem
 );
-productRouter.get("/catgory-unique",ProductController.GetHierarchicalCategories);
+productRouter.get(
+  "/catgory-unique",
+  ProductController.GetHierarchicalCategories
+);
 export default productRouter;

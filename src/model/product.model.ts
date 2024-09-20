@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 // Base Interface for Product
-interface IProduct extends Document {
+export interface IProduct extends Document {
   name: string;
   category: string; // General product category like 't-shirt', 'pants', etc.
   subcategory: string;
@@ -28,7 +28,7 @@ interface IProduct extends Document {
   productDetails: Map<string, string>;
 }
 
-interface IProductVariant extends Document {
+export interface IProductVariant extends Document {
   size: { size: string; stock: number }[];
   color: string;
   material: string;
@@ -37,6 +37,7 @@ interface IProductVariant extends Document {
   sku: string;
   images: string[];
   available: boolean;
+  _id:string;
 }
 
 // Interface for Customer Reviews

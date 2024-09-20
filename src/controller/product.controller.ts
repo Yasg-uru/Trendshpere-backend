@@ -148,34 +148,36 @@ class ProductController {
       next();
     }
   }
-  public static async cart(
+  public static async Addcart(
     req: reqwithuser,
     res: Response,
     next: NextFunction
   ) {
     try {
-      const { productId, variantId } = req.params;
-      const { quantity, size, color } = req.body;
+      console.log("add cart method is called :", req.body);
+      const { productId, variantId, size, quantity } = req.body;
       const user = await usermodel.findById(req.user?._id);
       if (!user) {
         return next(new Errorhandler(404, "User not found "));
       }
+      console.log("this is user :", user);
       user.cart.push({
         productId: productId as unknown as Schema.Types.ObjectId,
         variantId: variantId as unknown as Schema.Types.ObjectId,
         quantity,
         size,
-        color,
       });
       await user.save();
-      res.status(200).json({
+      res.status(201).json({
         message: "Added to cart successfully",
         user,
       });
     } catch (error) {
-      next();
+      console.log("this is error :", error);
+      next(error);
     }
   }
+  
 
   public static async removecart(
     req: reqwithuser,

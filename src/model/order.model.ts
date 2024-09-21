@@ -15,7 +15,7 @@ export interface IOrder extends Document {
   couponCode?: string; // Applied coupon code
   taxAmount?: number; // Tax applied to the total order amount
   finalAmount: number; // Final amount after applying discounts and taxes
-
+  deliveryType: "standard" | "express";
   address: {
     street: string;
     city: string;
@@ -93,7 +93,11 @@ const orderSchema: Schema = new Schema<IOrder>(
     couponCode: { type: String },
     taxAmount: { type: Number },
     finalAmount: { type: Number, required: true }, // After discounts and taxes
-
+deliveryType:{
+  type:String ,
+  enum:['standard','express'],
+  default:'standard'
+},
     address: {
       street: { type: String, required: true },
       city: { type: String, required: true },

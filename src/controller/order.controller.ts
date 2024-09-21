@@ -42,8 +42,13 @@ export const createOrder = async (
       couponCode,
       loyaltyPointsUsed,
       isGiftOrder,
+      deliveryType,
       giftMessage,
     } = req.body;
+    let deliveryCharge: number = 0;
+    if (deliveryType === "express") {
+      deliveryCharge = 10;
+    }
     if (couponCode !== "SPRING2024") {
       return next(new Errorhandler(400, "Please Enter Correct Coupon Code"));
     }
@@ -56,7 +61,9 @@ export const createOrder = async (
     });
     const taxRate = 0.1;
     const taxAmount = totalAmount * taxRate;
-    const finalAmount = Math.floor(totalAmount - discountAmount + taxAmount);
+    const finalAmount = Math.floor(
+      totalAmount - discountAmount + taxAmount + deliveryCharge
+    );
     const razorpayOrder = await razorpay.orders.create({
       amount: parseInt(finalAmount.toString()) * 100,
       currency: "INR",

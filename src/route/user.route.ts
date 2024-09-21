@@ -7,6 +7,7 @@ import {
   Logout,
   registerUser,
   Resetpassword,
+  updateAddress,
   verifyuser,
 } from "../controller/user.controller";
 import upload from "../middleware/multer.middleware";
@@ -21,6 +22,7 @@ userRouter.post("/logout", Logout);
 userRouter.post("/forgot-password", forgotPassword);
 userRouter.put("/reset-password/:token", Resetpassword);
 userRouter.get("/carts", isAuthenticated, GetCarts);
-userRouter.post("/add-address",isAuthenticated,AddNewAddress);
+userRouter.post("/add-address", isAuthenticated, AddNewAddress);
+userRouter.put("/update-address/:addressId", isAuthenticated, updateAddress);
 
 export default userRouter;

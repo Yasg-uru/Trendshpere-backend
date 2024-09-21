@@ -284,19 +284,88 @@ export const AddNewAddress = async (
   next: NextFunction
 ) => {
   try {
-    const { address } = req.body;
+    const {
+      name,
+      addressLine1,
+      addressLine2,
+      city,
+      state,
+      postalCode,
+      country,
+      phone,
+      type,
+    } = req.body;
     const userId = req.user?._id;
     const user = await usermodel.findById(userId);
     if (!user) {
       return next(new Errorhandler(404, "User not found "));
     }
-    user.address.push({ ...address });
+    user.address.push({
+      name,
+      addressLine1,
+      addressLine2,
+      city,
+      state,
+      postalCode,
+      country,
+      phone,
+      type,
+    });
     await user.save();
     res.status(200).json({
       message: "Successfully added new address",
       user,
     });
   } catch (error) {
+    next(new Errorhandler(500, "Internal server error"));
+  }
+};
+export const updateAddress = async (
+  req: reqwithuser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req.user?._id;
+    const { addressId } = req.params;
+
+    const {
+      name,
+      addressLine1,
+      addressLine2,
+      city,
+      state,
+      postalCode,
+      country,
+      phone,
+      type,
+    } = req.body;
+    const user = await usermodel.findById(userId);
+    if (!user) {
+      return next(new Errorhandler(404, "user not found "));
+    }
+    const address = user.address.find(
+      (address) => address?._id?.toString() === addressId.toString()
+    );
+    if (!address) {
+      return next(new Errorhandler(494, "Address Not found "));
+    }
+    address.name=name || address.name;
+    address.addressLine1=addressLine1 || address.addressLine1
+    address.addressLine2=addressLine2 || address.addressLine2
+    address.city=city || address.city
+    address.state=state || address.state
+    address.postalCode=postalCode || address.postalCode
+    address.country=country || address.country
+    address.phone=phone || address.phone
+    address.type=type || address.type
+    await user.save();
+    res.status(200).json({
+      message :"Updated address successfully",
+      user
+    })
+  } catch (error) {
     next(error);
+    
   }
 };

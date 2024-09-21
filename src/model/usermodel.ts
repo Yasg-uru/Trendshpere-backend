@@ -63,6 +63,9 @@ export interface User extends Document {
     postalCode: string;
     country: string;
     phone: string;
+    type:
+      "Home"|"University"|"Work"|"Hotel";
+      _id?:string;
   }[];
   createdAt: Date;
   updatedAt: Date;
@@ -127,6 +130,13 @@ const userSchema = new Schema<User>(
         postalCode: { type: String },
         country: { type: String },
         phone: { type: String },
+        type: {
+          type: String,
+          required: [true, "Address type is required "],
+          enum: [
+            "Home","University","Work","Hotel"
+          ],
+        },
       },
     ],
     preferences: {

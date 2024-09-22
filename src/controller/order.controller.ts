@@ -7,9 +7,13 @@ import Ordermodel from "../model/order.model";
 import Razorpay from "razorpay";
 import { Product } from "../model/product.model";
 import usermodel from "../model/usermodel";
+// const razorpay = new Razorpay({
+//   key_id: "rzp_live_tK7jKIBkQuTeH7",
+//   key_secret: "d3q0tkLxfFVKoizPqeboYYsm",
+// });
 const razorpay = new Razorpay({
-  key_id: "rzp_live_tK7jKIBkQuTeH7",
-  key_secret: "d3q0tkLxfFVKoizPqeboYYsm",
+  key_id: "rzp_test_7dU2Zk3usqjmRX",
+  key_secret: "AtoGFb47DrDC0hdZfXR9dnCi",
 });
 
 const calculateDiscountPrice = (couponCode: string, products: any) => {
@@ -146,9 +150,10 @@ export const VerifyPayment = async (
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
       req.body;
     const generatedSignature = crypto
-      .createHmac("sha256", "d3q0tkLxfFVKoizPqeboYYsm") // Replace this with your Razorpay secret key
+      .createHmac("sha256", "AtoGFb47DrDC0hdZfXR9dnCi") // Replace this with your Razorpay secret key
       .update(razorpay_order_id + "|" + razorpay_payment_id)
       .digest("hex");
+    console.log("this is a generated signature :", generatedSignature);
     if (razorpay_signature !== generatedSignature) {
       return next(
         new Errorhandler(400, "Payment verification failed. Invalid signature.")

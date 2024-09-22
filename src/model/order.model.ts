@@ -59,18 +59,15 @@ export interface IOrder extends Document {
     completionDate?: Date;
   };
   auditLog: {
-    action: string; // E.g., "status_change", "payment_update", etc.
-    actor: Schema.Types.ObjectId; // Reference to the user/admin who performed the action
+    action: string; 
+    actor: Schema.Types.ObjectId; 
     timestamp: Date;
-    description?: string; // Detailed description of the action
+    description?: string; 
   }[];
-  // affiliateDetails?: {
-  //   affiliateId: Schema.Types.ObjectId; // Reference to the affiliate
-  //   commissionAmount: number; // Commission for the affiliate
-  // };
-  loyaltyPointsUsed?: number; // Loyalty points applied to this order
-  isGiftOrder?: boolean; // Whether this order is marked as a gift
-  giftMessage?: string; // Personalized message for gift orders
+
+  loyaltyPointsUsed?: number; 
+  isGiftOrder?: boolean; 
+  giftMessage?: string; 
 }
 
 const orderSchema: Schema = new Schema<IOrder>(

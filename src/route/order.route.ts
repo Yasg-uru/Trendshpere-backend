@@ -11,7 +11,7 @@ import {
 } from "../controller/order.controller";
 
 const orderRouter = Router();
-orderRouter.post("/create", createOrder);
+orderRouter.post("/create",isAuthenticated, createOrder);
 orderRouter.post("/verify", isAuthenticated, VerifyPayment);
 orderRouter.post("/cancel", isAuthenticated, cancelOrder);
 orderRouter.post("/return", isAuthenticated, returnPolicy);

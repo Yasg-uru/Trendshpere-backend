@@ -45,13 +45,14 @@ export const createOrder = async (
       deliveryType,
       giftMessage,
     } = req.body;
+    console.log("this is a req.body of the create order :", req.body);
     let deliveryCharge: number = 0;
     if (deliveryType === "express") {
       deliveryCharge = 10;
     }
-    if (couponCode !== "SPRING2024") {
-      return next(new Errorhandler(400, "Please Enter Correct Coupon Code"));
-    }
+    // if (couponCode !== "SPRING2024") {
+    //   return next(new Errorhandler(400, "Please Enter Correct Coupon Code"));
+    // }
     const updatedproducts = calculateDiscountPrice(couponCode, products);
     let totalAmount = 0;
     let discountAmount = 0;
@@ -80,6 +81,7 @@ export const createOrder = async (
           priceAtPurchase: any;
           discount: any;
           discountByCoupon: any;
+          size: any;
         }) => ({
           productId: product.productId,
           variantId: product.variantId,
@@ -87,6 +89,7 @@ export const createOrder = async (
           priceAtPurchase: product.priceAtPurchase,
           discount: product.discount,
           discountByCoupon: product.discountByCoupon,
+          size: product.size,
         })
       ),
       totalAmount,
@@ -131,6 +134,7 @@ export const createOrder = async (
     });
   } catch (error) {
     console.log("ths is a error message ,", error);
+    next(error);
   }
 };
 export const VerifyPayment = async (

@@ -6,6 +6,7 @@ export interface IOrder extends Document {
     productId: Schema.Types.ObjectId; // Reference to the Product
     variantId: Schema.Types.ObjectId; // Reference to the ProductVariant
     quantity: number;
+    size: string;
     priceAtPurchase: number; // Price per item at the time of order
     discount: number; // Discount applied on the product, if any
     discountByCoupon: number;
@@ -18,11 +19,15 @@ export interface IOrder extends Document {
   deliveryType: "standard" | "express";
   deliveryCharge?: number;
   address: {
-    street: string;
+    name: string;
+    addressLine1: string;
+    addressLine2: string;
     city: string;
     state: string;
-    country: string;
     postalCode: string;
+    country: string;
+    phone: string;
+    type: "Home" | "University" | "Work" | "Hotel";
   };
   payment: {
     paymentId: string; // Payment provider ID (e.g., Razorpay, Stripe)
@@ -83,6 +88,7 @@ const orderSchema: Schema = new Schema<IOrder>(
           ref: "ProductVariant",
           required: true,
         },
+        size: { type: String, required: [true, "size also required"] },
         quantity: { type: Number, required: true },
         priceAtPurchase: { type: Number, required: true },
         discount: { type: Number, default: 0 },
@@ -104,13 +110,20 @@ const orderSchema: Schema = new Schema<IOrder>(
       default: 0,
     },
     address: {
-      street: { type: String, required: true },
+      name: { type: String, required: true },
+      addressLine1: { type: String, required: true },
+      addressLine2: { type: String },
       city: { type: String, required: true },
       state: { type: String, required: true },
-      country: { type: String, required: true },
       postalCode: { type: String, required: true },
+      country: { type: String, required: true },
+      phone: { type: String },
+      type: {
+        type: String,
+        enum: ["Home", "University", "Work", "Hotel"],
+        required: true,
+      },
     },
-
     payment: {
       paymentId: { type: String, required: true },
       provider: { type: String, required: true },

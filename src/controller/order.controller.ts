@@ -441,6 +441,7 @@ export const FilterOrders = async (
     // Initialize query object for MongoDB
     const query: any = {};
     const user = req.user?._id;
+
     // Add search conditions dynamically based on query params
     if (user) query.user = user;
     if (status) query.orderStatus = status;
@@ -480,20 +481,30 @@ export const FilterOrders = async (
     // Count total matching documents (without pagination)
     const totalOrders = await Ordermodel.countDocuments(query);
 
+    // Calculate total pages and pagination flags
+    const totalPages = Math.ceil(totalOrders / Number(limit));
+    const currentPage = Number(page);
+    const hasNextPage = currentPage < totalPages;
+    const hasPrevPage = currentPage > 1;
+
+    // Send response with pagination data
     res.status(200).json({
       success: true,
       orders,
       pagination: {
         totalOrders,
-        currentPage: Number(page),
-        totalPages: Math.ceil(totalOrders / Number(limit)),
+        currentPage,
+        totalPages,
         limit: Number(limit),
+        hasNextPage,
+        hasPrevPage,
       },
     });
   } catch (error) {
     next(new Error("Error fetching orders"));
   }
 };
+
 export const searchOrders = async (
   req: reqwithuser,
   res: Response,

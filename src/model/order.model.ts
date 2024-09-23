@@ -59,15 +59,15 @@ export interface IOrder extends Document {
     completionDate?: Date;
   };
   auditLog: {
-    action: string; 
-    actor: Schema.Types.ObjectId; 
+    action: string;
+    actor: Schema.Types.ObjectId;
     timestamp: Date;
-    description?: string; 
+    description?: string;
   }[];
 
-  loyaltyPointsUsed?: number; 
-  isGiftOrder?: boolean; 
-  giftMessage?: string; 
+  loyaltyPointsUsed?: number;
+  isGiftOrder?: boolean;
+  giftMessage?: string;
 }
 
 const orderSchema: Schema = new Schema<IOrder>(

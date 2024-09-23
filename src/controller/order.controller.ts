@@ -420,7 +420,7 @@ export const FilterOrders = async (
   try {
     // Extract filters from query parameters
     const {
-      status, // Order status
+      orderStatus, // Order status
       productId, // Product ID
       variantId, // Product Variant ID
       paymentStatus, // Payment status
@@ -430,6 +430,7 @@ export const FilterOrders = async (
       isGiftOrder, // If it's a gift order
       city, // Address city
       country, // Address country
+
       minTotalAmount, // Minimum order amount
       maxTotalAmount, // Maximum order amount
       page = 1, // Pagination: default page 1
@@ -444,7 +445,7 @@ export const FilterOrders = async (
 
     // Add search conditions dynamically based on query params
     if (user) query.user = user;
-    if (status) query.orderStatus = status;
+    if (orderStatus) query.orderStatus = status;
     if (productId) query["products.productId"] = productId;
     if (variantId) query["products.variantId"] = variantId;
     if (paymentStatus) query["payment.paymentStatus"] = paymentStatus;
@@ -476,7 +477,8 @@ export const FilterOrders = async (
     const orders = await Ordermodel.find(query)
       .skip(skip)
       .limit(Number(limit))
-      .sort(sortOptions);
+      .sort(sortOptions)
+      .populate("products.productId");
 
     // Count total matching documents (without pagination)
     const totalOrders = await Ordermodel.countDocuments(query);
@@ -513,21 +515,40 @@ export const searchOrders = async (
   try {
     const { searchQuery } = req.query;
     if (!searchQuery) {
-      return next(new Errorhandler(404, "Please Enter query for search"));
+      return next(new Errorhandler(404, "Please enter a query for search"));
     }
+
     const user = req.user?._id;
+
+    // Create a regex for case-insensitive searching
+    const regex = new RegExp(searchQuery as string, "i"); // 'i' for case-insensitivity
+
+    // Use $or to search across multiple fields
     const orders = await Ordermodel.find({
       user,
-      $text: { $search: searchQuery as string },
+      $or: [
+        { "address.street": regex },
+        { "address.city": regex },
+        { "address.state": regex },
+        { "address.country": regex },
+        { "address.name": regex },
+        { "address.addressLine1": regex },
+        { "address.addressLine2": regex },
+        { "address.postalCode": regex },
+        { "address.phone": regex },
+        { giftMessage: regex },
+      ],
     });
+
     res.status(200).json({
       message: "Searched your orders successfully",
       orders,
     });
   } catch (error) {
-    next();
+    next(error); // Ensure the error is passed to the next middleware
   }
 };
+
 export const updateOrderStatus = async (
   req: reqwithuser,
   res: Response,

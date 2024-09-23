@@ -192,6 +192,11 @@ orderSchema.index({
   "address.city": "text",
   "address.state": "text",
   "address.country": "text",
+  "address.name": "text",
+  "address.addressLine1": "text",
+  "address.addressLine2": "text",
+  "address.postalCode": "text",
+  "address.phone": "text",
   giftMessage: "text",
 });
 const Ordermodel = mongoose.model<IOrder>("Order", orderSchema);

@@ -227,7 +227,7 @@ export const cancelOrder = async (
 ) => {
   try {
     const { OrderId, cancelReason } = req.body;
-    console.log("this is a order cancel controller :", req.body);
+    // console.log("this is a order cancel controller :", req.body);
     const userId = req.user?._id;
     const order = await Ordermodel.findById(OrderId).populate(
       "products.productId"
@@ -235,7 +235,7 @@ export const cancelOrder = async (
     if (!order) {
       return next(new Errorhandler(404, "Order not found "));
     }
-    
+
     // if (order.user.toString() !== userId.toString()) {
     //   return next(new Errorhandler(400, "Unauthorized Access"));
     // }
@@ -268,9 +268,10 @@ export const cancelOrder = async (
     if (order.payment.paymentStatus === "completed") {
       const refund = await refundPayment(
         order.payment.paymentId,
-        order.totalAmount
+        order.finalAmount
       );
-      if (refund.success) {
+      console.log("this is a refund data :", refund.data);
+      if (!refund.success) {
         return next(new Errorhandler(400, "Refund Failed"));
       }
       order.payment.paymentStatus = "refunded";
@@ -292,7 +293,7 @@ export const cancelOrder = async (
       await order.save();
     }
     res.status(200).json({
-      message: "Order Canceled Successfully",
+      message: "Order Cancelled Successfully",
       order,
     });
   } catch (error) {
@@ -441,7 +442,7 @@ export const FilterOrders = async (
       sortBy = "createdAt", // Sorting field (default: createdAt)
       order = "desc", // Sorting order (default: descending)
     } = req.query;
-    console.log("this is a req.query:", req.query);
+    // console.log("this is a req.query:", req.query);
     // Initialize query object for MongoDB
     const query: any = {};
     const user = req.user?._id;

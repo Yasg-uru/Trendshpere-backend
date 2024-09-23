@@ -438,14 +438,14 @@ export const FilterOrders = async (
       sortBy = "createdAt", // Sorting field (default: createdAt)
       order = "desc", // Sorting order (default: descending)
     } = req.query;
-console.log("this is a req.query:",req.query)
+    console.log("this is a req.query:", req.query);
     // Initialize query object for MongoDB
     const query: any = {};
     const user = req.user?._id;
 
     // Add search conditions dynamically based on query params
     if (user) query.user = user;
-    if (orderStatus) query.orderStatus = orderStatus;
+    if (orderStatus) query.orderStatus = { $in: orderStatus };
     if (productId) query["products.productId"] = productId;
     if (variantId) query["products.variantId"] = variantId;
     if (paymentStatus) query["payment.paymentStatus"] = paymentStatus;

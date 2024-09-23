@@ -227,16 +227,18 @@ export const cancelOrder = async (
 ) => {
   try {
     const { OrderId, cancelReason } = req.body;
+    console.log("this is a order cancel controller :", req.body);
     const userId = req.user?._id;
     const order = await Ordermodel.findById(OrderId).populate(
-      "products.product products.variant"
+      "products.productId"
     );
     if (!order) {
       return next(new Errorhandler(404, "Order not found "));
     }
-    if (order.user.toString() !== userId) {
-      return next(new Errorhandler(400, "Unauthorized Access"));
-    }
+    
+    // if (order.user.toString() !== userId.toString()) {
+    //   return next(new Errorhandler(400, "Unauthorized Access"));
+    // }
     if (order.orderStatus === "shipped" || order.orderStatus === "delivered") {
       return next(
         new Errorhandler(
@@ -294,7 +296,8 @@ export const cancelOrder = async (
       order,
     });
   } catch (error) {
-    return next(new Errorhandler(500, "Something went wrong"));
+    console.log("this is a error :", error);
+    next(error);
   }
 };
 

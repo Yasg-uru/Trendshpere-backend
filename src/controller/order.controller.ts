@@ -352,15 +352,29 @@ export const returnPolicy = async (
 ) => {
   try {
     const { orderId, returnItems } = req.body;
+
+    // Find the order by ID
     const order = await Ordermodel.findById(orderId);
     if (!order) {
-      return next(new Errorhandler(404, "order not found "));
+      return next(new Errorhandler(404, "Order not found"));
     }
+
+    console.log("Return items:", returnItems);
+
     let refundAmount: number = 0;
+
+    // Wait for all return items to be processed
     await Promise.all(
       returnItems.map(async (item: any) => {
-        const product = await Product.findById(item.productId);
-        if (product) {
+        try {
+          const product = await Product.findById(item.productId);
+          if (!product) {
+            throw new Errorhandler(
+              404,
+              `Product with ID ${item.productId} not found`
+            );
+          }
+
           if (product.returnPolicy.eligible) {
             const currentDate = new Date();
             const purchasedDate = new Date(order.createdAt);
@@ -368,52 +382,119 @@ export const returnPolicy = async (
             const timeDifference =
               currentDate.getTime() - purchasedDate.getTime();
             const daysSincePurchase = timeDifference / (1000 * 3600 * 24);
+
             if (daysSincePurchase <= refundDaysAllowed) {
-            }
-            const variant = product.variants.find(
-              (variant) => variant.toString() === item.variantId.toString()
-            );
-            if (variant) {
+              const variant = product.variants.find(
+                (variant) =>
+                  variant._id.toString() === item.variantId.toString()
+              );
+
+              if (!variant) {
+                throw new Errorhandler(
+                  404,
+                  `Variant with ID ${item.variantId} not found`
+                );
+              }
+
               variant.stock += item.quantity;
-              refundAmount +=
-                item.priceAtPurchase * item.quantity -
-                item.discount * item.quantity;
+
+              // Calculate refund amount
+              const calculatedRefund =
+                item.priceAtPurchase - item.discount - item.discountByCoupon;
+
+              if (calculatedRefund > 0) {
+                refundAmount += calculatedRefund * item.quantity;
+              } else {
+                throw new Errorhandler(
+                  400,
+                  "Invalid calculated refund amount for item"
+                );
+              }
+            } else {
+              throw new Errorhandler(400, "Refund period exceeded for item");
             }
+          } else {
+            throw new Errorhandler(
+              400,
+              `Item with ID ${item.productId} is not eligible for return`
+            );
           }
+        } catch (error) {
+          // Pass any error encountered during product/variant lookup and refund calculation
+          return next(error);
         }
       })
     );
-    if (order.payment.paymentStatus === "completed") {
-      const refundResponse = await refundPayment(
-        order.payment.paymentId,
-        refundAmount
-      );
-      if (!refundResponse.success) {
-        return next(new Errorhandler(400, "Refund Failed"));
-      }
-      order.payment.paymentStatus = "refunded";
-      order.refund = {
-        requested: true,
-        amount: refundAmount,
-        status: "completed",
-        requestDate: new Date(),
-        completionDate: new Date(),
-      };
-      order.auditLog.push({
-        action: "return_processed",
-        actor: order.user,
-        timestamp: new Date(),
-        description: `Refund of ₹${refundAmount} processed for returned items.`,
-      });
-      await order.save();
-      res.status(200).json({
-        success: true,
-        message: "Return processed and refund initiated successfully.",
-        refundAmount,
-        order,
-      });
+
+    console.log("Total refund amount:", refundAmount);
+
+    // Ensure refundAmount is valid before proceeding with Razorpay refund
+    if (refundAmount <= 0) {
+      return next(new Errorhandler(400, "Invalid refund amount calculated"));
     }
-  } catch (error) {}
+
+    // Proceed with the refund only after the above Promise.all has been resolved
+    if (order.payment.paymentStatus === "completed") {
+      try {
+        const refundResponse = await refundPayment(
+          order.payment.paymentId,
+          refundAmount
+        );
+
+        if (!refundResponse.success) {
+          return next(new Errorhandler(400, "Refund Failed"));
+        }
+
+        // Update order status
+        order.payment.paymentStatus = "refunded";
+        order.refund = {
+          requested: true,
+          amount: refundAmount,
+          status: "completed",
+          requestDate: new Date(),
+          completionDate: new Date(),
+        };
+
+        order.auditLog.push({
+          action: "return_processed",
+          actor: order.user,
+          timestamp: new Date(),
+          description: `Refund of ₹${refundAmount} processed for returned items.`,
+        });
+
+        // Save the updated order
+        await order.save();
+
+        // Return success response
+        res.status(200).json({
+          success: true,
+          message: "Return processed and refund initiated successfully.",
+          refundAmount,
+          order,
+        });
+      } catch (error) {
+        console.log("Error occurred during refund process:", error);
+        return next(
+          new Errorhandler(500, "Error occurred while processing the refund")
+        );
+      }
+    } else {
+      return next(
+        new Errorhandler(
+          400,
+          "Payment status is not completed, refund not possible"
+        )
+      );
+    }
+  } catch (error) {
+    console.log("Error occurred during return process:", error);
+    next(
+      new Errorhandler(
+        500,
+        "An error occurred while processing the return policy"
+      )
+    );
+  }
 };
 
 export const FilterOrders = async (
@@ -492,7 +573,7 @@ export const FilterOrders = async (
     const currentPage = Number(page);
     const hasNextPage = currentPage < totalPages;
     const hasPrevPage = currentPage > 1;
-    console.log("this is a orders :", orders);
+    // console.log("this is a orders :", orders);
     // Send response with pagination data
     res.status(200).json({
       success: true,
@@ -564,6 +645,13 @@ export const updateOrderStatus = async (
     if (!order) {
       return next(new Errorhandler(404, "Order not found"));
     }
+    // we need to implement this in later after testing of this website
+    // if (
+    //   (user.role !== "admin" && user.role !== "delivery_boy") ||
+    //   (user.role === "delivery_boy" && status !== "delivered")
+    // ) {
+    //   return next(new Errorhandler(403, "You are not authorized to update this order"));
+    // }
     if (status === "cancelled") {
       if (order.orderStatus === "delivered") {
         return next(

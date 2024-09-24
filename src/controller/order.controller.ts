@@ -448,6 +448,7 @@ export const returnPolicy = async (
 
         // Update order status
         order.payment.paymentStatus = "refunded";
+        order.orderStatus = "returned";
         order.refund = {
           requested: true,
           amount: refundAmount,

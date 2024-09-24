@@ -434,6 +434,7 @@ export const returnPolicy = async (
     }
 
     // Proceed with the refund only after the above Promise.all has been resolved
+    console.log("this is a order payment status:", order.payment.paymentStatus);
     if (order.payment.paymentStatus === "completed") {
       try {
         const refundResponse = await refundPayment(

@@ -999,7 +999,7 @@ export const FilterOrdersForAdmin = async (
         .json({ success: false, message: "Limit must be greater than 0." });
     }
 
-    // Build the filter object
+    
     const filter: any = {};
 
     if (deliveryType) {
@@ -1011,13 +1011,13 @@ export const FilterOrdersForAdmin = async (
     }
 
     if (userId) {
-      filter.user = userId; // Assuming userId is the ObjectId of the User
+      filter.user = userId; 
     }
 
     if (productId) {
       filter.products = {
         ...filter.products,
-        productId: productId, // Filter by productId in nested products array
+        productId: productId, 
       };
     }
 
@@ -1031,15 +1031,15 @@ export const FilterOrdersForAdmin = async (
       }
     }
 
-    // Fetch filtered orders with pagination
+  
     const orders = await Ordermodel.find(filter)
       .populate("user")
       .populate("products.productId")
       .populate("products.variantId")
-      .skip((pageNumber - 1) * limitNumber) // Skip documents for pagination
-      .limit(limitNumber); // Limit the number of documents returned
+      .skip((pageNumber - 1) * limitNumber) 
+      .limit(limitNumber); 
 
-    // Get the total count of orders matching the filter
+    
     const totalOrders = await Ordermodel.countDocuments(filter);
 
     res.status(200).json({

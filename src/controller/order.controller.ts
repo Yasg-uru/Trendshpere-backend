@@ -323,27 +323,122 @@ export const refundPayment = async (paymentId: string, TotalAmount: number) => {
     };
   }
 };
-// export const replacementItems = async (
-//   req: reqwithuser,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const { orderId, replacmentItems } = req.body;
-//     const userId = req.user?._id;
-//     const order = await Ordermodel.findById(orderId).populate(
-//       "products.product"
-//     );
-//     if (!order) {
-//       return next(new Errorhandler(404, "order not found"));
-//     }
-//     await Promise.all(
-//       replacmentItems.map(async (item) => {
-//         const product = await Product.findById();
-//       })
-//     );
-//   } catch (error) {}
-// };
+
+export const replacePolicy = async (
+  req: reqwithuser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { orderId, replaceItems, reason } = req.body;
+
+    // Fetch the order by ID
+    const order = await Ordermodel.findById(orderId);
+    if (!order) {
+      return next(new Errorhandler(404, "Order not found"));
+    }
+
+    // Process each item in replaceItems array
+    await Promise.all(
+      replaceItems.map(async (item: any) => {
+        try {
+          const product = await Product.findById(item.productId);
+          if (!product) {
+            // Use `next` to handle the error within an async function
+            return next(
+              new Errorhandler(
+                404,
+                `Product with ID ${item.productId} not found`
+              )
+            );
+          }
+
+          // Check if the product is eligible for replacement
+          if (product.replcementPolicy.elgible) {
+            const currentDate = new Date();
+            const purchaseDate = new Date(order.createdAt);
+            const replaceDaysAllowed = product.replcementPolicy.replacementDays;
+            const timeDifference =
+              currentDate.getTime() - purchaseDate.getTime();
+            const daysSincePurchase = timeDifference / (1000 * 3600 * 24);
+
+            // Ensure the replacement period is still valid
+            if (daysSincePurchase <= replaceDaysAllowed) {
+              // Find the ordered product by productId and variantId
+              const orderProduct = order.products.find(
+                (prod) =>
+                  prod.productId.toString() === item.productId.toString() &&
+                  prod.variantId.toString() === item.variantId.toString()
+              );
+
+              if (!orderProduct) {
+                return next(
+                  new Errorhandler(
+                    404,
+                    `Ordered product with variant ID ${item.variantId} not found`
+                  )
+                );
+              }
+
+              // Mark the product as requested for replacement
+              orderProduct.replacement = {
+                requested: true,
+                status: "pending",
+                reason,
+                requestDate: new Date(),
+              };
+            } else {
+              // Handle cases where the replacement period has passed
+              return next(
+                new Errorhandler(
+                  400,
+                  `Replacement period exceeded for product ID ${item.productId}`
+                )
+              );
+            }
+          } else {
+            // Handle cases where the product is not eligible for replacement
+            return next(
+              new Errorhandler(
+                400,
+                `Product with ID ${item.productId} is not eligible for replacement`
+              )
+            );
+          }
+        } catch (error) {
+          console.error("Error processing replacement for item:", error);
+          return next(new Errorhandler(500, "Internal server error"));
+        }
+      })
+    );
+
+    // Audit log for replacement request
+    order.auditLog.push({
+      action: "replacement_requested",
+      actor: order.user,
+      timestamp: new Date(),
+      description: `Replacement requested for some items.`,
+    });
+
+    // Save the updated order
+    await order.save();
+
+    // Success response
+    res.status(200).json({
+      success: true,
+      message: "Replacement request initiated successfully",
+      order,
+    });
+  } catch (error) {
+    console.error("Error occurred while processing replacement:", error);
+    next(
+      new Errorhandler(
+        500,
+        "An error occurred while processing the replacement"
+      )
+    );
+  }
+};
 
 export const returnPolicy = async (
   req: reqwithuser,
@@ -397,9 +492,6 @@ export const returnPolicy = async (
                 );
               }
 
-              // Update stock
-              variant.stock += item.quantity;
-
               // Calculate refund amount
               const calculatedRefund =
                 item.priceAtPurchase - item.discount - item.discountByCoupon;
@@ -408,7 +500,9 @@ export const returnPolicy = async (
 
                 // Update the refund field in the products array of the order
                 const orderProduct = order.products.find(
-                  (prod) => prod.productId.toString() === item.productId
+                  (prod) =>
+                    prod.productId.toString() === item.productId.toString() &&
+                    prod.variantId.toString() === item.variantId.toString()
                 );
                 if (orderProduct) {
                   orderProduct.refund = {

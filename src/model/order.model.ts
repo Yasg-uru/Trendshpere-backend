@@ -10,6 +10,20 @@ export interface IOrder extends Document {
     priceAtPurchase: number; // Price per item at the time of order
     discount: number; // Discount applied on the product, if any
     discountByCoupon: number;
+    refund?: {
+      requested: boolean;
+      amount: number;
+      status: "pending" | "completed" | "failed";
+      requestDate?: Date;
+      completionDate?: Date;
+    };
+    replacement?: {
+      requested: boolean;
+      reason?: string;
+      status?: "pending" | "approved" | "rejected";
+      requestDate?: Date;
+      responseDate?: Date;
+    };
   }[];
   totalAmount: number; // Total amount for the order (before discounts, taxes)
   discountAmount?: number; // Total discount applied to the order
@@ -41,23 +55,7 @@ export interface IOrder extends Document {
   orderStatus: string;
   createdAt: Date;
   updatedAt: Date;
-  replacementRequest?: {
-    productId: Schema.Types.ObjectId;
-    variantId: Schema.Types.ObjectId;
-    quantity: number;
-    requested: boolean;
-    reason?: string;
-    status?: "pending" | "approved" | "rejected";
-    requestDate?: Date;
-    responseDate?: Date;
-  }[];
-  refund?: {
-    requested: boolean;
-    amount: number;
-    status: "pending" | "completed" | "failed";
-    requestDate?: Date;
-    completionDate?: Date;
-  };
+
   auditLog: {
     action: string;
     actor: Schema.Types.ObjectId;
@@ -90,6 +88,24 @@ const orderSchema: Schema = new Schema<IOrder>(
         priceAtPurchase: { type: Number, required: true },
         discount: { type: Number, default: 0 },
         discountByCoupon: { type: Number, required: true },
+        refund: {
+          requested: { type: Boolean, default: false },
+          amount: { type: Number },
+          status: {
+            type: String,
+            enum: ["pending", "completed", "failed"],
+            default: "pending",
+          },
+          requestDate: { type: Date },
+          completionDate: { type: Date },
+        },
+        replacement: {
+          requested: { type: Boolean, default: false },
+          reason: { type: String },
+          status: { type: String, enum: ["pending", "approved", "rejected"] },
+          requestDate: { type: Date },
+          responseDate: { type: Date },
+        },
       },
     ],
     totalAmount: { type: Number, required: true },
@@ -143,32 +159,12 @@ const orderSchema: Schema = new Schema<IOrder>(
         "delivered",
         "returned",
         "cancelled",
+        "return_requested",
+        "replacement_requested",
       ],
       default: "pending",
     },
-    replacementRequest: [
-      {
-        productId: { type: Schema.Types.ObjectId },
-        variantId: { type: Schema.Types.ObjectId },
-        requested: { type: Boolean, default: false },
-        reason: { type: String },
-        status: { type: String, enum: ["pending", "approved", "rejected"] },
-        requestDate: { type: Date },
-        responseDate: { type: Date },
-      },
-    ],
-    refund: {
-      requested: { type: Boolean, default: false },
-      amount: { type: Number },
 
-      status: {
-        type: String,
-        enum: ["pending", "completed", "failed"],
-        default: "pending",
-      },
-      requestDate: { type: Date },
-      completionDate: { type: Date },
-    },
     auditLog: [
       {
         action: { type: String, required: true },
@@ -177,10 +173,7 @@ const orderSchema: Schema = new Schema<IOrder>(
         description: { type: String },
       },
     ],
-    // affiliateDetails: {
-    //   affiliateId: { type: Schema.Types.ObjectId, ref: "Affiliate" },
-    //   commissionAmount: { type: Number },
-    // },
+
     loyaltyPointsUsed: { type: Number, default: 0 },
     isGiftOrder: { type: Boolean, default: false },
     giftMessage: { type: String },

@@ -275,13 +275,13 @@ export const cancelOrder = async (
         return next(new Errorhandler(400, "Refund Failed"));
       }
       order.payment.paymentStatus = "refunded";
-      order.refund = {
-        requested: true,
-        amount: order.totalAmount,
-        status: "completed",
-        requestDate: new Date(),
-        completionDate: new Date(),
-      };
+      // order.refund = {
+      //   requested: true,
+      //   amount: order.totalAmount,
+      //   status: "completed",
+      //   requestDate: new Date(),
+      //   completionDate: new Date(),
+      // };
       order.auditLog.push({
         action: "order_cancelled",
         actor: order.user, // Assuming `userId` holds the ID of the user performing the action
@@ -361,9 +361,10 @@ export const returnPolicy = async (
 
     console.log("Return items:", returnItems);
 
-    let refundAmount: number = 0;
+    // Initialize refund details
+    let totalRefundAmount: number = 0;
 
-    // Wait for all return items to be processed
+    // Process each return item
     await Promise.all(
       returnItems.map(async (item: any) => {
         try {
@@ -396,14 +397,27 @@ export const returnPolicy = async (
                 );
               }
 
+              // Update stock
               variant.stock += item.quantity;
 
               // Calculate refund amount
               const calculatedRefund =
                 item.priceAtPurchase - item.discount - item.discountByCoupon;
-
               if (calculatedRefund > 0) {
-                refundAmount += calculatedRefund * item.quantity;
+                totalRefundAmount += calculatedRefund * item.quantity;
+
+                // Update the refund field in the products array of the order
+                const orderProduct = order.products.find(
+                  (prod) => prod.productId.toString() === item.productId
+                );
+                if (orderProduct) {
+                  orderProduct.refund = {
+                    requested: true,
+                    amount: totalRefundAmount,
+                    status: "pending",
+                    requestDate: new Date(),
+                  };
+                }
               } else {
                 throw new Errorhandler(
                   400,
@@ -420,74 +434,32 @@ export const returnPolicy = async (
             );
           }
         } catch (error) {
-          // Pass any error encountered during product/variant lookup and refund calculation
           return next(error);
         }
       })
     );
 
-    console.log("Total refund amount:", refundAmount);
+    console.log("Total refund amount:", totalRefundAmount);
 
-    // Ensure refundAmount is valid before proceeding with Razorpay refund
-    if (refundAmount <= 0) {
-      return next(new Errorhandler(400, "Invalid refund amount calculated"));
-    }
+    // Update order audit log
+    order.auditLog.push({
+      action: "return_requested",
+      actor: order.user,
+      timestamp: new Date(),
+      description: `Refund of ₹${totalRefundAmount} requested for returned items.`,
+    });
 
-    // Proceed with the refund only after the above Promise.all has been resolved
-    console.log("this is a order payment status:", order.payment.paymentStatus);
-    if (order.payment.paymentStatus === "completed") {
-      try {
-        const refundResponse = await refundPayment(
-          order.payment.paymentId,
-          refundAmount
-        );
+    // Save the updated order with refund status
+    await order.save();
 
-        if (!refundResponse.success) {
-          return next(new Errorhandler(400, "Refund Failed"));
-        }
-
-        // Update order status
-        order.payment.paymentStatus = "refunded";
-        order.orderStatus = "returned";
-        order.refund = {
-          requested: true,
-          amount: refundAmount,
-          status: "completed",
-          requestDate: new Date(),
-          completionDate: new Date(),
-        };
-
-        order.auditLog.push({
-          action: "return_processed",
-          actor: order.user,
-          timestamp: new Date(),
-          description: `Refund of ₹${refundAmount} processed for returned items.`,
-        });
-
-        // Save the updated order
-        await order.save();
-
-        // Return success response
-        res.status(200).json({
-          success: true,
-          message: "Return processed and refund initiated successfully.",
-          refundAmount,
-          order,
-        });
-      } catch (error) {
-        console.log("Error occurred during refund process:", error);
-        return next(
-          new Errorhandler(500, "Error occurred while processing the refund")
-        );
-      }
-    } else {
-      return next(
-        new Errorhandler(
-          400,
-          "Payment status is not completed, refund not possible"
-        )
-      );
-    }
+    // Return success response
+    res.status(200).json({
+      success: true,
+      message:
+        "Return processed successfully. Refund request has been initiated.",
+      refundAmount: totalRefundAmount,
+      order,
+    });
   } catch (error) {
     console.log("Error occurred during return process:", error);
     next(
@@ -690,13 +662,13 @@ export const updateOrderStatus = async (
           return next(new Errorhandler(400, "Refund Failed"));
         }
         order.payment.paymentStatus = "refunded";
-        order.refund = {
-          requested: true,
-          amount: order.totalAmount,
-          status: "completed",
-          requestDate: new Date(),
-          completionDate: new Date(),
-        };
+        // order.refund = {
+        //   requested: true,
+        //   amount: order.totalAmount,
+        //   status: "completed",
+        //   requestDate: new Date(),
+        //   completionDate: new Date(),
+        // };
         order.auditLog.push({
           action: "order_cancelled",
           actor: order.user, // Assuming `userId` holds the ID of the user performing the action
@@ -716,5 +688,104 @@ export const updateOrderStatus = async (
     });
   } catch (error) {
     next();
+  }
+};
+
+export const processReturnedItems = async (
+  req: reqwithuser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { orderId, returnItems } = req.body;
+
+    // Find the order by ID
+    const order = await Ordermodel.findById(orderId);
+    if (!order) {
+      return next(new Errorhandler(404, "Order not found"));
+    }
+
+    // Calculate total refund amount for eligible return items
+    let totalRefundAmount = 0;
+
+    // Check if the order contains return items
+    const itemsToProcess = order.products.filter((product) =>
+      returnItems.some(
+        (item: any) =>
+          item.productId.toString() === product.productId.toString()
+      )
+    );
+
+    // Update product stocks and mark items as returned
+    await Promise.all(
+      itemsToProcess.map(async (orderProduct) => {
+        const returnedItem = returnItems.find(
+          (item: any) => item.productId === orderProduct.productId.toString()
+        );
+
+        if (returnedItem) {
+          const product = await Product.findById(orderProduct.productId);
+          if (!product) {
+            throw new Errorhandler(404, `Product not found`);
+          }
+
+          // Update stock for the returned item
+          const variant = product.variants.find(
+            (v) => v._id.toString() === returnedItem.variantId.toString()
+          );
+          if (variant) {
+            // Increment the stock of the variant
+            variant.stock += returnedItem.quantity;
+
+            // Update the return status of the order product
+            if (orderProduct.refund) {
+              orderProduct.refund.status = "completed"; // Mark as returned
+              orderProduct.refund.completionDate = new Date(); // Set received date
+            }
+
+            // Calculate refund amount
+            const calculatedRefund =
+              returnedItem.priceAtPurchase -
+              returnedItem.discount -
+              returnedItem.discountByCoupon;
+            totalRefundAmount += Math.max(
+              calculatedRefund * returnedItem.quantity,
+              0
+            ); // Ensure no negative refunds
+          } else {
+            throw new Errorhandler(404, `Variant not found for product`);
+          }
+
+          // Save the updated product stock
+          await product.save();
+        }
+      })
+    );
+
+    // Save the updated order with the modified refund statuses
+    await order.save();
+
+    // Process the payment refund
+    const paymentRefundResponse = await refundPayment(
+      order.payment.paymentId,
+      totalRefundAmount
+    );
+    if (!paymentRefundResponse.success) {
+      return next(new Errorhandler(500, "Refund failed"));
+    }
+
+    // Return success response
+    res.status(200).json({
+      success: true,
+      message:
+        "Returned items processed successfully. Product stocks updated and refund initiated.",
+      order,
+      refundDetails: paymentRefundResponse.data, // Include refund details in the response
+    });
+  } catch (error) {
+    console.log("Error occurred while processing returned items:", error);
+    next(
+      new Errorhandler(500, "An error occurred while processing returned items")
+    );
   }
 };

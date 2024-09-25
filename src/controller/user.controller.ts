@@ -350,22 +350,21 @@ export const updateAddress = async (
     if (!address) {
       return next(new Errorhandler(494, "Address Not found "));
     }
-    address.name=name || address.name;
-    address.addressLine1=addressLine1 || address.addressLine1
-    address.addressLine2=addressLine2 || address.addressLine2
-    address.city=city || address.city
-    address.state=state || address.state
-    address.postalCode=postalCode || address.postalCode
-    address.country=country || address.country
-    address.phone=phone || address.phone
-    address.type=type || address.type
+    address.name = name || address.name;
+    address.addressLine1 = addressLine1 || address.addressLine1;
+    address.addressLine2 = addressLine2 || address.addressLine2;
+    address.city = city || address.city;
+    address.state = state || address.state;
+    address.postalCode = postalCode || address.postalCode;
+    address.country = country || address.country;
+    address.phone = phone || address.phone;
+    address.type = type || address.type;
     await user.save();
     res.status(200).json({
-      message :"Updated address successfully",
-      user
-    })
+      message: "Updated address successfully",
+      user,
+    });
   } catch (error) {
     next(error);
-    
   }
 };

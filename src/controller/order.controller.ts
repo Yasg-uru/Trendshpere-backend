@@ -7,6 +7,7 @@ import Ordermodel from "../model/order.model";
 import Razorpay from "razorpay";
 import { Product } from "../model/product.model";
 import usermodel from "../model/usermodel";
+import { Schema } from "mongoose";
 // const razorpay = new Razorpay({
 //   key_id: "rzp_live_tK7jKIBkQuTeH7",
 //   key_secret: "d3q0tkLxfFVKoizPqeboYYsm",
@@ -439,7 +440,85 @@ export const replacePolicy = async (
     );
   }
 };
+export const processReplacement = async (
+  req: reqwithuser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { replacementItems, orderId, status } = req.body;
+    const order = await Ordermodel.findById(orderId);
+    if (!order) {
+      return next(new Errorhandler(404, "Order not found "));
+    }
+    //after finding the order we need to preform the operations
+    await Promise.all(
+      replacementItems.map((item: any) => {
+        const orderProduct = order.products.find(
+          (product) =>
+            product.productId.toString() === item.productId.toString() &&
+            item.variantId.toString() === product.variantId.toString()
+        );
+        if (!orderProduct) {
+          return next(
+            new Errorhandler(
+              404,
+              `Product with ID ${item.productId} not found in the order`
+            )
+          );
+        }
+        if (status === "rejected") {
+          if (orderProduct.replacement?.status === "pending") {
+            orderProduct.replacement.status = "rejected";
+            orderProduct.replacement.responseDate = new Date();
+          } else {
+            return next(
+              new Errorhandler(
+                400,
+                "Replacement request not in a valid state to be rejected"
+              )
+            );
+          }
+        }
+        if (status === "approved") {
+          if (orderProduct.replacement?.status === "pending") {
+            // Mark the replacement request as approved
+            orderProduct.replacement.status = "approved";
+            orderProduct.replacement.responseDate = new Date();
 
+            // Optionally: Add logic to handle product return from the customer and product replacement shipping
+          } else {
+            return next(
+              new Errorhandler(
+                400,
+                "Replacement request not in a valid state to be approved"
+              )
+            );
+          }
+        }
+      })
+    );
+    order.auditLog.push({
+      action: "replacement_status_updated",
+      actor: req.user?._id as Schema.Types.ObjectId, // Assuming req.user contains the authenticated user making the change (admin or delivery personnel)
+      timestamp: new Date(),
+      description: `Replacement ${status} for order ${orderId}`,
+    });
+    await order.save();
+    res.status(200).json({
+      success: true,
+      message: `Replacement request(s) ${status} successfully`,
+      order,
+    });
+  } catch (error) {
+    next(
+      new Errorhandler(
+        500,
+        "An error occurred while processing the replacement"
+      )
+    );
+  }
+};
 export const returnPolicy = async (
   req: reqwithuser,
   res: Response,

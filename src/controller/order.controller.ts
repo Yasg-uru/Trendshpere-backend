@@ -962,3 +962,97 @@ export const processReturnedItems = async (
     );
   }
 };
+
+export const FilterOrdersForAdmin = async (
+  req: reqwithuser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const {
+      deliveryType,
+      orderStatus,
+      userId,
+      startDate,
+      endDate,
+      productId,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    // Convert page and limit to numbers
+    const pageNumber = parseInt(page as string, 10);
+    const limitNumber = parseInt(limit as string, 10);
+
+    // Validate pagination inputs
+    if (pageNumber < 1) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Page number must be greater than 0.",
+        });
+    }
+    if (limitNumber < 1) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Limit must be greater than 0." });
+    }
+
+    // Build the filter object
+    const filter: any = {};
+
+    if (deliveryType) {
+      filter.deliveryType = deliveryType;
+    }
+
+    if (orderStatus) {
+      filter.orderStatus = orderStatus;
+    }
+
+    if (userId) {
+      filter.user = userId; // Assuming userId is the ObjectId of the User
+    }
+
+    if (productId) {
+      filter.products = {
+        ...filter.products,
+        productId: productId, // Filter by productId in nested products array
+      };
+    }
+
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) {
+        filter.createdAt.$gte = new Date(startDate.toString());
+      }
+      if (endDate) {
+        filter.createdAt.$lte = new Date(endDate.toString());
+      }
+    }
+
+    // Fetch filtered orders with pagination
+    const orders = await Ordermodel.find(filter)
+      .populate("user")
+      .populate("products.productId")
+      .populate("products.variantId")
+      .skip((pageNumber - 1) * limitNumber) // Skip documents for pagination
+      .limit(limitNumber); // Limit the number of documents returned
+
+    // Get the total count of orders matching the filter
+    const totalOrders = await Ordermodel.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      data: orders,
+      pagination: {
+        totalOrders,
+        totalPages: Math.ceil(totalOrders / limitNumber),
+        currentPage: pageNumber,
+        limit: limitNumber,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

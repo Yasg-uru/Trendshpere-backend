@@ -4,6 +4,7 @@ import {
   cancelOrder,
   createOrder,
   FilterOrders,
+  FilterOrdersForAdmin,
   processReplacement,
   processReturnedItems,
   replacePolicy,
@@ -19,10 +20,10 @@ orderRouter.post("/verify", isAuthenticated, VerifyPayment);
 orderRouter.post("/cancel", isAuthenticated, cancelOrder);
 orderRouter.post("/return", isAuthenticated, returnPolicy);
 orderRouter.post("/processreturn-items", isAuthenticated, processReturnedItems);
-orderRouter.post("request-replace",isAuthenticated,replacePolicy);
-orderRouter.post("/process-replacement",isAuthenticated,processReplacement);
+orderRouter.post("request-replace", isAuthenticated, replacePolicy);
+orderRouter.post("/process-replacement", isAuthenticated, processReplacement);
 orderRouter.get("/filter", isAuthenticated, FilterOrders);
 orderRouter.get("/search", isAuthenticated, searchOrders);
 orderRouter.put("/update", isAuthenticated, updateOrderStatus);
-
+orderRouter.get("/filter-order",isAuthenticated,FilterOrdersForAdmin);
 export default orderRouter;

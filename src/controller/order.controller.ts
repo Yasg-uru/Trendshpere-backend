@@ -65,10 +65,11 @@ export const createOrder = async (
       totalAmount += product.priceAtPurchase * product.quantity;
       discountAmount += product.discount * product.quantity;
     });
-    const taxRate = 0.1;
-    const taxAmount = totalAmount * taxRate;
+    // const taxRate = 0.1;
+    const taxAmount = totalAmount;
+    // const taxAmount = totalAmount * taxRate;
     const finalAmount = Math.floor(
-      totalAmount - discountAmount + taxAmount + deliveryCharge
+      totalAmount - discountAmount + deliveryCharge
     );
     const razorpayOrder = await razorpay.orders.create({
       amount: parseInt(finalAmount.toString()) * 100,
@@ -986,12 +987,10 @@ export const FilterOrdersForAdmin = async (
 
     // Validate pagination inputs
     if (pageNumber < 1) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Page number must be greater than 0.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Page number must be greater than 0.",
+      });
     }
     if (limitNumber < 1) {
       return res
@@ -999,7 +998,6 @@ export const FilterOrdersForAdmin = async (
         .json({ success: false, message: "Limit must be greater than 0." });
     }
 
-    
     const filter: any = {};
 
     if (deliveryType) {
@@ -1011,13 +1009,13 @@ export const FilterOrdersForAdmin = async (
     }
 
     if (userId) {
-      filter.user = userId; 
+      filter.user = userId;
     }
 
     if (productId) {
       filter.products = {
         ...filter.products,
-        productId: productId, 
+        productId: productId,
       };
     }
 
@@ -1031,15 +1029,13 @@ export const FilterOrdersForAdmin = async (
       }
     }
 
-  
     const orders = await Ordermodel.find(filter)
       .populate("user")
       .populate("products.productId")
       .populate("products.variantId")
-      .skip((pageNumber - 1) * limitNumber) 
-      .limit(limitNumber); 
+      .skip((pageNumber - 1) * limitNumber)
+      .limit(limitNumber);
 
-    
     const totalOrders = await Ordermodel.countDocuments(filter);
 
     res.status(200).json({

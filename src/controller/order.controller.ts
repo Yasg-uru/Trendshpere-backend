@@ -336,13 +336,26 @@ export const replacePolicy = async (
 ) => {
   try {
     const { orderId, replaceItems, reason } = req.body;
-
+    console.log("this is a replacement items req.body for testing :", req.body);
     // Fetch the order by ID
+
     const order = await Ordermodel.findById(orderId);
     if (!order) {
       return next(new Errorhandler(404, "Order not found"));
     }
-
+    if (
+      order.orderStatus === "delivered" ||
+      order.orderStatus === "replacement_requested" ||
+      order.orderStatus === "returned" ||
+      order.orderStatus === "cancelled"
+    ) {
+      return next(
+        new Errorhandler(
+          401,
+          `You can't able to replace this order becaused this order is already ${order.orderStatus}`
+        )
+      );
+    }
     // Process each item in replaceItems array
     await Promise.all(
       replaceItems.map(async (item: any) => {
@@ -424,7 +437,7 @@ export const replacePolicy = async (
       timestamp: new Date(),
       description: `Replacement requested for some items.`,
     });
-
+    order.orderStatus = "replacement_requested";
     // Save the updated order
     await order.save();
 

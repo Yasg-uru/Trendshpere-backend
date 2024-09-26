@@ -7,7 +7,7 @@ const productRouter = Router();
 productRouter.post(
   "/create",
   isAuthenticated,
-  authorization(["admin"]),
+  // authorization(["admin"]),
   ProductController.create
 );
 productRouter.put(

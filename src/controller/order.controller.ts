@@ -846,7 +846,7 @@ export const updateOrderStatus = async (
       if (order.payment.paymentStatus === "completed") {
         const refund = await refundPayment(
           order.payment.paymentId,
-          order.totalAmount
+          order.finalAmount
         );
         if (refund.success) {
           return next(new Errorhandler(400, "Refund Failed"));

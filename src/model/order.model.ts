@@ -170,6 +170,7 @@ const orderSchema: Schema = new Schema<IOrder>(
         "delivered",
         "returned",
         "cancelled",
+        "replaced",
         "return_requested",
         "replacement_requested",
       ],

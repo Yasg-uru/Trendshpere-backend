@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IOrder extends Document {
   user: Schema.Types.ObjectId; // Reference to the User
+
   products: {
     productId: Schema.Types.ObjectId; // Reference to the Product
     variantId: Schema.Types.ObjectId; // Reference to the ProductVariant
@@ -10,6 +11,8 @@ export interface IOrder extends Document {
     priceAtPurchase: number; // Price per item at the time of order
     discount: number; // Discount applied on the product, if any
     discountByCoupon: number;
+    isReplaceable: boolean;
+    isReturnable: boolean;
     refund?: {
       requested: boolean;
       amount: number;
@@ -88,6 +91,14 @@ const orderSchema: Schema = new Schema<IOrder>(
         priceAtPurchase: { type: Number, required: true },
         discount: { type: Number, default: 0 },
         discountByCoupon: { type: Number, required: true },
+        isReplaceable: {
+          type: Boolean,
+          default: true,
+        },
+        isReturnable: {
+          type: Boolean,
+          default: true,
+        },
         refund: {
           requested: { type: Boolean, default: false },
           amount: { type: Number },

@@ -61,7 +61,17 @@ export const createOrder = async (
     const updatedproducts = calculateDiscountPrice(couponCode, products);
     let totalAmount = 0;
     let discountAmount = 0;
-    updatedproducts.forEach((product: any) => {
+    const productWithPolicies = await Promise.all(
+      updatedproducts.map(async (product: any) => {
+        const productDetails = await Product.findById(product.productId);
+        return {
+          ...product,
+          isReturnable: productDetails?.returnPolicy?.eligible || false,
+          isReplaceable: productDetails?.replcementPolicy?.elgible || false,
+        };
+      })
+    );
+    productWithPolicies.forEach((product: any) => {
       totalAmount += product.priceAtPurchase * product.quantity;
       discountAmount += product.discount * product.quantity;
     });
@@ -77,27 +87,20 @@ export const createOrder = async (
       receipt: `receipt_${Date.now()}`,
       payment_capture: true,
     });
+
     const newOrder = new Ordermodel({
       user,
-      products: updatedproducts.map(
-        (product: {
-          productId: any;
-          variantId: any;
-          quantity: any;
-          priceAtPurchase: any;
-          discount: any;
-          discountByCoupon: any;
-          size: any;
-        }) => ({
-          productId: product.productId,
-          variantId: product.variantId,
-          quantity: product.quantity,
-          priceAtPurchase: product.priceAtPurchase,
-          discount: product.discount,
-          discountByCoupon: product.discountByCoupon,
-          size: product.size,
-        })
-      ),
+      products: productWithPolicies.map((product: any) => ({
+        productId: product.productId,
+        variantId: product.variantId,
+        quantity: product.quantity,
+        size: product.size,
+        priceAtPurchase: product.priceAtPurchase,
+        discount: product.discount,
+        discountByCoupon: product.discountByCoupon,
+        isReturnable: product.isReturnable,
+        isReplaceable: product.isReplaceable,
+      })),
       totalAmount,
       discountAmount,
       couponCode,
@@ -979,6 +982,7 @@ export const FilterOrdersForAdmin = async (
       productId,
       page = 1,
       limit = 10,
+      searchTerm,
     } = req.query;
 
     // Convert page and limit to numbers
@@ -992,10 +996,12 @@ export const FilterOrdersForAdmin = async (
         message: "Page number must be greater than 0.",
       });
     }
+
     if (limitNumber < 1) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Limit must be greater than 0." });
+      return res.status(400).json({
+        success: false,
+        message: "Limit must be greater than 0.",
+      });
     }
 
     const filter: any = {};
@@ -1019,6 +1025,18 @@ export const FilterOrdersForAdmin = async (
       };
     }
 
+    // Add search functionality
+    if (searchTerm) {
+      const regex = new RegExp(searchTerm as string, "i"); // Create a case-insensitive regex
+      filter.$or = [
+        { "user.name": regex }, // Assuming user has a name field
+        { "products.productName": regex }, // Assuming product has a productName field
+        { orderStatus: regex }, // Search in order status
+        // Add other fields that should be searchable here
+      ];
+    }
+
+    // Date filtering
     if (startDate || endDate) {
       filter.createdAt = {};
       if (startDate) {
@@ -1029,6 +1047,7 @@ export const FilterOrdersForAdmin = async (
       }
     }
 
+    // Fetching orders based on filters
     const orders = await Ordermodel.find(filter)
       .populate("user")
       .populate("products.productId")
@@ -1040,7 +1059,7 @@ export const FilterOrdersForAdmin = async (
 
     res.status(200).json({
       success: true,
-      data: orders,
+      orders,
       pagination: {
         totalOrders,
         totalPages: Math.ceil(totalOrders / limitNumber),

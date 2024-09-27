@@ -173,6 +173,8 @@ const orderSchema: Schema = new Schema<IOrder>(
         "replaced",
         "return_requested",
         "replacement_requested",
+      
+
       ],
       default: "pending",
     },

@@ -345,7 +345,7 @@ export const replacePolicy = async (
     }
     if (
       order.orderStatus === "delivered" ||
-      order.orderStatus === "replacement_requested" ||
+      order.orderStatus === "replaced" ||
       order.orderStatus === "returned" ||
       order.orderStatus === "cancelled"
     ) {
@@ -437,7 +437,7 @@ export const replacePolicy = async (
       timestamp: new Date(),
       description: `Replacement requested for some items.`,
     });
-    order.orderStatus = "replacement_requested";
+    order.orderStatus = "replaced";
     // Save the updated order
     await order.save();
 

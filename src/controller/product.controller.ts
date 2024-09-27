@@ -663,6 +663,24 @@ class ProductController {
       next();
     }
   }
+  public static async getSingleProduct(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { productId } = req.params;
+      const product = await Product.findById(productId);
+      if (!product) {
+        return next(new Errorhandler(404, "product not found"));
+      }
+      res.status(200).json({
+        product,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default ProductController;

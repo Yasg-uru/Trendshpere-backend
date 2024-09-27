@@ -37,7 +37,7 @@ export interface IProductVariant extends Document {
   sku: string;
   images: string[];
   available: boolean;
-  _id:string;
+  _id: string;
 }
 
 // Interface for Customer Reviews

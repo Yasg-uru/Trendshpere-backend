@@ -640,7 +640,7 @@ export const returnPolicy = async (
       timestamp: new Date(),
       description: `Refund of ₹${totalRefundAmount} requested for returned items.`,
     });
-
+    order.orderStatus = "return_requested";
     // Save the updated order with refund status
     await order.save();
 

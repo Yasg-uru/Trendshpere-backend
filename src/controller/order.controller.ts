@@ -464,17 +464,19 @@ export const processReplacement = async (
 ) => {
   try {
     const { replacementItems, orderId, status } = req.body;
+    console.log("this a req.body :", req.body);
     const order = await Ordermodel.findById(orderId);
     if (!order) {
       return next(new Errorhandler(404, "Order not found "));
     }
+    console.log("this a order that is finded by the  :", order);
     //after finding the order we need to preform the operations
     await Promise.all(
       replacementItems.map((item: any) => {
         const orderProduct = order.products.find(
           (product) =>
             product.productId.toString() === item.productId.toString() &&
-            item.variantId.toString() === product.variantId.toString()
+            product.variantId.toString() === item.variantId.toString()
         );
         if (!orderProduct) {
           return next(
@@ -1064,7 +1066,7 @@ export const FilterOrdersForAdmin = async (
     const orders = await Ordermodel.find(filter)
       .populate("user")
       .populate("products.productId")
-      .populate("products.variantId")
+
       .skip((pageNumber - 1) * limitNumber)
       .limit(limitNumber);
 

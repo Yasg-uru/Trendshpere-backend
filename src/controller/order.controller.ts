@@ -1088,7 +1088,7 @@ export const FilterOrdersForAdmin = async (
 export const GetSingleOrder=async (req:reqwithuser,res:Response,next:NextFunction)=>{
   try {
     const {orderId}=req.params;
-    const order=await Ordermodel.findById(orderId);
+    const order=await Ordermodel.findById(orderId).populate("products.productId");
     if(!order){
       return next(new Errorhandler(404,"order not found "));
 
@@ -1098,6 +1098,6 @@ export const GetSingleOrder=async (req:reqwithuser,res:Response,next:NextFunctio
     })
   } catch (error) {
     next(error);
-    
+
   }
 }

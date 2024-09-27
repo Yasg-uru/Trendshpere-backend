@@ -890,7 +890,7 @@ export const processReturnedItems = async (
 ) => {
   try {
     const { orderId, returnItems } = req.body;
-
+    console.log("this is a return items :", returnItems);
     // Find the order by ID
     const order = await Ordermodel.findById(orderId);
     if (!order) {
@@ -899,12 +899,15 @@ export const processReturnedItems = async (
 
     // Calculate total refund amount for eligible return items
     let totalRefundAmount = 0;
+    let totalAmount = 0;
+    let discountAmount = 0;
 
     // Check if the order contains return items
     const itemsToProcess = order.products.filter((product) =>
       returnItems.some(
         (item: any) =>
-          item.productId.toString() === product.productId.toString()
+          item.productId.toString() === product.productId.toString() &&
+          item.variantId.toString() === product.variantId.toString()
       )
     );
 
@@ -934,16 +937,11 @@ export const processReturnedItems = async (
               orderProduct.refund.status = "completed"; // Mark as returned
               orderProduct.refund.completionDate = new Date(); // Set received date
             }
-
+            // totalAmount += product.priceAtPurchase * product.quantity;
+            // discountAmount += product.discount * product.quantity;
             // Calculate refund amount
-            const calculatedRefund =
-              returnedItem.priceAtPurchase -
-              returnedItem.discount -
-              returnedItem.discountByCoupon;
-            totalRefundAmount += Math.max(
-              calculatedRefund * returnedItem.quantity,
-              0
-            ); // Ensure no negative refunds
+            totalAmount += returnedItem.priceAtPurchase * returnedItem.quantity;
+            discountAmount += returnedItem.discount * returnedItem.quantity;
           } else {
             throw new Errorhandler(404, `Variant not found for product`);
           }
@@ -953,7 +951,8 @@ export const processReturnedItems = async (
         }
       })
     );
-
+    totalRefundAmount = totalAmount - discountAmount;
+    console.log("this is a totask refun amount :", totalRefundAmount);
     // Save the updated order with the modified refund statuses
     await order.save();
 

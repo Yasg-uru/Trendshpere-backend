@@ -5,6 +5,7 @@ import {
   createOrder,
   FilterOrders,
   FilterOrdersForAdmin,
+  GetSingleOrder,
   processReplacement,
   processReturnedItems,
   replacePolicy,
@@ -26,4 +27,6 @@ orderRouter.get("/filter", isAuthenticated, FilterOrders);
 orderRouter.get("/search", isAuthenticated, searchOrders);
 orderRouter.put("/update", isAuthenticated, updateOrderStatus);
 orderRouter.get("/filter-order", isAuthenticated, FilterOrdersForAdmin);
+orderRouter.get("/single/:orderId", isAuthenticated, GetSingleOrder);
+
 export default orderRouter;

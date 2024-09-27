@@ -1085,3 +1085,19 @@ export const FilterOrdersForAdmin = async (
     next(error);
   }
 };
+export const GetSingleOrder=async (req:reqwithuser,res:Response,next:NextFunction)=>{
+  try {
+    const {orderId}=req.params;
+    const order=await Ordermodel.findById(orderId);
+    if(!order){
+      return next(new Errorhandler(404,"order not found "));
+
+    }
+    res.status(200).json({
+      order
+    })
+  } catch (error) {
+    next(error);
+    
+  }
+}

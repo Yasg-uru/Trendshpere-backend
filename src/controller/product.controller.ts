@@ -276,9 +276,6 @@ class ProductController {
     next: NextFunction
   ) {
     try {
-      // const customerId = req.user?._id as Schema.Types.ObjectId;
-      const customerId =
-        "66e0139e7f59c516d80a3283" as unknown as Schema.Types.ObjectId;
       const { comment, rating } = req.body;
       const { productId } = req.params;
       const product = await Product.findById(productId);
@@ -317,7 +314,7 @@ class ProductController {
       const images = (await Promise.all(imagePromises)).filter(Boolean);
 
       product.reviews.push({
-        customerId,
+        customerId: req.user?._id,
         comment,
         rating,
         images,

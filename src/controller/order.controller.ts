@@ -128,8 +128,22 @@ export const createOrder = async (
     });
     const Existinguser = await usermodel.findById(user);
     if (Existinguser) {
-      Existinguser.address.push({ ...address });
-      await Existinguser.save();
+      const isExistingAddress = Existinguser.address.some(
+        (add) =>
+          address.addressLine1 === add.addressLine1 &&
+          address.addressLine2 === add.addressLine2 &&
+          address.city === add.city &&
+          address.state === add.state &&
+          address.postalCode === add.postalCode &&
+          address.country === add.country &&
+          address.country === add.country &&
+          address.phone === add.phone &&
+          address.type === add.type
+      );
+      if (!isExistingAddress) {
+        Existinguser.address.push(address);
+        await Existinguser.save();
+      }
     }
 
     await newOrder.save();

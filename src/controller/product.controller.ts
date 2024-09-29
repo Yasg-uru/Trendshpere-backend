@@ -161,6 +161,10 @@ class ProductController {
         return next(new Errorhandler(404, "User not found "));
       }
       console.log("this is user :", user);
+      const isAlreadyExist=user.cart.find((cart)=>cart.productId.toString()===productId.toString() && cart.variantId.toString()===variantId.toString());
+      if(isAlreadyExist){
+        return next(new Errorhandler(400,"Already Exist in the cart "));
+      }
       user.cart.push({
         productId: productId as unknown as Schema.Types.ObjectId,
         variantId: variantId as unknown as Schema.Types.ObjectId,

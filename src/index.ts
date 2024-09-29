@@ -7,6 +7,7 @@ import productRouter from "./route/product.route";
 import userRouter from "./route/user.route";
 import cors from "cors";
 import orderRouter from "./route/order.route";
+import { ErrorhandlerMiddleware } from "./util/Errorhandler.util";
 config();
 const app: Application = express();
 app.use(express.json());
@@ -28,6 +29,7 @@ app.use("/user", userRouter);
 app.use("/order", orderRouter);
 
 ConnectDB();
+app.use(ErrorhandlerMiddleware);
 
 app.listen(PORT, () => {
   console.log(`Trendsphere server is running on port :${PORT}`);

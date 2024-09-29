@@ -161,9 +161,13 @@ class ProductController {
         return next(new Errorhandler(404, "User not found "));
       }
       console.log("this is user :", user);
-      const isAlreadyExist=user.cart.find((cart)=>cart.productId.toString()===productId.toString() && cart.variantId.toString()===variantId.toString());
-      if(isAlreadyExist){
-        return next(new Errorhandler(400,"Already Exist in the cart "));
+      const isAlreadyExist = user.cart.find(
+        (cart) =>
+          cart.productId.toString() === productId.toString() &&
+          cart.variantId.toString() === variantId.toString()
+      );
+      if (isAlreadyExist) {
+        return next(new Errorhandler(400, "Already Exist in the cart "));
       }
       user.cart.push({
         productId: productId as unknown as Schema.Types.ObjectId,
@@ -680,6 +684,22 @@ class ProductController {
       }
       res.status(200).json({
         product,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+  public static async GetProductsByIds(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { productsIds } = req.body;
+      const products = await Product.find({ _id: { $in: productsIds } });
+      res.status(200).json({
+        message: "Fetched successfullt products by the ids",
+        products,
       });
     } catch (error) {
       next(error);

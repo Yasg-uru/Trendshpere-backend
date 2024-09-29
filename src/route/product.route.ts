@@ -76,5 +76,10 @@ productRouter.put(
   isAuthenticated,
   ProductController.updateCartQuantity
 );
-productRouter.get("/single/:productId",ProductController.getSingleProduct)
+productRouter.get("/single/:productId", ProductController.getSingleProduct);
+productRouter.get(
+  "/products",
+  isAuthenticated,
+  ProductController.GetProductsByIds
+);
 export default productRouter;

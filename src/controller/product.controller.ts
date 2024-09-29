@@ -696,6 +696,8 @@ class ProductController {
   ) {
     try {
       const { productsIds } = req.body;
+      console.log("this is req,params ", req.body);
+      // const idsArray = (productsIds as string).split(",");
       const products = await Product.find({ _id: { $in: productsIds } });
       res.status(200).json({
         message: "Fetched successfullt products by the ids",

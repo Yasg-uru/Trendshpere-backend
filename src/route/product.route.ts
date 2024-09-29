@@ -77,7 +77,7 @@ productRouter.put(
   ProductController.updateCartQuantity
 );
 productRouter.get("/single/:productId", ProductController.getSingleProduct);
-productRouter.get(
+productRouter.post(
   "/products",
   isAuthenticated,
   ProductController.GetProductsByIds

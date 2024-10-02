@@ -48,7 +48,9 @@ export interface IProductReview extends Document {
   createdAt: Date; // Date when the review was written
   images: IReviewImage[];
   helpfulCount: number;
+  helpfulcountgivenBy: Schema.Types.ObjectId[];
   isVerifiedPurchase: boolean;
+  _id: string;
 }
 export interface IReviewImage {
   url: string;
@@ -101,6 +103,12 @@ const productReviewSchema: Schema = new Schema<IProductReview>({
   rating: { type: Number, min: 0, max: 5, required: true },
   createdAt: { type: Date, default: Date.now() },
   helpfulCount: { type: Number, default: 0 },
+  helpfulcountgivenBy: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
   isVerifiedPurchase: { type: Boolean, default: false },
   images: [ReviewImageSchema],
 });

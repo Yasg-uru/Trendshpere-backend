@@ -7,6 +7,7 @@ const productRouter = Router();
 productRouter.post(
   "/create",
   isAuthenticated,
+
   // authorization(["admin"]),
   ProductController.create
 );
@@ -35,6 +36,11 @@ productRouter.post(
   upload.array("images"),
   isAuthenticated,
   ProductController.AddRating
+);
+productRouter.post(
+  "/helpfullcount/:productId/:reviewId",
+  isAuthenticated,
+  ProductController.Helpfulcount
 );
 productRouter.get("/search", ProductController.searchProduct);
 productRouter.get("/filters", ProductController.Filter);

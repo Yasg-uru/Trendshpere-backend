@@ -270,6 +270,35 @@ class ProductController {
       next(error);
     }
   }
+  public static async Helpfulcount(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { reviewId, productId } = req.params;
+      const userId = req.user?._id;
+
+      const product = await Product.findById(productId);
+      if (!product) {
+        return next(new Errorhandler(404, "product not found "));
+      }
+      const review = product.reviews.find(
+        (r) => r._id.toString() === reviewId.toString()
+      );
+      if (!review) {
+        return next(new Errorhandler(404, "Review not found"));
+      }
+      review.helpfulCount += 1;
+      review.helpfulcountgivenBy.push(userId as Schema.Types.ObjectId);
+      await product.save();
+      res.status(200).json({
+        message: "Added your helpful count ",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
   public static async AddRating(
     req: reqwithuser,
     res: Response,

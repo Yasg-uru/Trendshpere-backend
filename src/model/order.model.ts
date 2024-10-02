@@ -66,7 +66,9 @@ export interface IOrder extends Document {
     timestamp: Date;
     description?: string;
   }[];
-
+  deliveryTime?: Date;
+  expectedDeliveryTime?: Date;
+  isDeliveredOnTime?: boolean;
   loyaltyPointsUsed?: number;
   isGiftOrder?: boolean;
   giftMessage?: string;
@@ -191,7 +193,9 @@ const orderSchema: Schema = new Schema<IOrder>(
         description: { type: String },
       },
     ],
-
+    deliveryTime: { type: Date },
+    expectedDeliveryTime: { type: Date },
+    isDeliveredOnTime: { type: Boolean, default: false },
     loyaltyPointsUsed: { type: Number, default: 0 },
     isGiftOrder: { type: Boolean, default: false },
     giftMessage: { type: String },

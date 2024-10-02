@@ -86,9 +86,16 @@ class DeliveryController {
         message: "Created delivery boy successfully",
       });
     } catch (error) {
-      next()
+      next(error);
     }
   }
+  // public static async (req:Request,res:Response,next:NextFunction){
+  //   try {
+
+  //   } catch (error) {
+
+  //   }
+  // }
 }
 
 export default DeliveryController;

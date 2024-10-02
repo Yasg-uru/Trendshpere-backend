@@ -8,6 +8,7 @@ import userRouter from "./route/user.route";
 import cors from "cors";
 import orderRouter from "./route/order.route";
 import { ErrorhandlerMiddleware } from "./util/Errorhandler.util";
+import deliveryRouter from "./route/delivery.route";
 config();
 const app: Application = express();
 app.use(express.json());
@@ -27,6 +28,7 @@ const PORT = process.env.PORT || 4000;
 app.use("/product", productRouter);
 app.use("/user", userRouter);
 app.use("/order", orderRouter);
+app.use("/delivery", deliveryRouter);
 
 ConnectDB();
 app.use(ErrorhandlerMiddleware);

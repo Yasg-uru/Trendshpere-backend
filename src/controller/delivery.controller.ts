@@ -67,7 +67,28 @@ class DeliveryController {
       return next(new Errorhandler(500, "Internal server error"));
     }
   }
-  
+  public static async createDeliveryBoy(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { userId, vehicleDetails, deliveryArea, status } = req.body;
+      const user = await usermodel.findById(userId);
+      if (!user) {
+        return next(new Errorhandler(404, "User not found "));
+      }
+      user.vehicleDetails = vehicleDetails;
+      user.deliveryArea = deliveryArea;
+      user.status = status;
+      await user.save();
+      res.status(200).json({
+        message: "Created delivery boy successfully",
+      });
+    } catch (error) {
+      next()
+    }
+  }
 }
 
 export default DeliveryController;

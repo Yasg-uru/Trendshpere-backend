@@ -58,6 +58,7 @@ export interface IOrder extends Document {
   orderStatus: string;
   createdAt: Date;
   updatedAt: Date;
+  deliveryBoyId: Schema.Types.ObjectId;
 
   auditLog: {
     action: string;
@@ -173,8 +174,13 @@ const orderSchema: Schema = new Schema<IOrder>(
         "replaced",
         "return_requested",
         "replacement_requested",
+        "out_for_delivery",
+        "delivery_failed",
       ],
       default: "pending",
+    },
+    deliveryBoyId: {
+      type: Schema.Types.ObjectId,
     },
 
     auditLog: [

@@ -4,7 +4,14 @@ import { reqwithuser } from "../middleware/auth.middleware";
 import usermodel from "../model/usermodel";
 import Errorhandler from "../util/Errorhandler.util";
 import Ordermodel from "../model/order.model";
+import mongoose from "mongoose";
 
+function getStartOfWeek(date: Date) {
+  const startOfWeek = new Date(date);
+  startOfWeek.setHours(0, 0, 0, 0); // Set time to 00:00:00
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Adjust to the start of the week (Sunday)
+  return startOfWeek;
+}
 class DeliveryController {
   public static async getMyDeliveries(
     req: reqwithuser,
@@ -60,8 +67,10 @@ class DeliveryController {
 
       // Send the response
       return res.status(200).json({
-        deliveryCounts,
-        pendingOrders,
+        deliveryData: {
+          deliveryCounts,
+          pendingOrders,
+        },
       });
     } catch (error) {
       return next(new Errorhandler(500, "Internal server error"));
@@ -81,7 +90,7 @@ class DeliveryController {
       user.vehicleDetails = vehicleDetails;
       user.deliveryArea = deliveryArea;
       user.status = status;
-      user.Role="delivery_boy";
+      user.Role = "delivery_boy";
       await user.save();
       res.status(200).json({
         message: "Created delivery boy successfully",
@@ -91,13 +100,76 @@ class DeliveryController {
       next(error);
     }
   }
-  // public static async (req:Request,res:Response,next:NextFunction){
-  //   try {
-
-  //   } catch (error) {
-
-  //   }
-  // }
+  public static async getWeeklyDeliveries(
+    req: reqwithuser, // Ensure reqwithuser includes user details, like deliveryBoyId
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const today = new Date();
+      const startOfWeek = getStartOfWeek(today); // Get start of the current week
+      console.log("this is a start of the week :", startOfWeek);
+      const deliveryBoyId = req.user?._id; // Fetch deliveryBoyId from params (or req.query)
+  
+      // MongoDB aggregation pipeline
+      const deliveries = await Ordermodel.aggregate([
+        // Match orders where the product was delivered in the current week and by the specific delivery boy
+        {
+          $match: {
+            orderStatus: "delivered", // Only count delivered orders
+            updatedAt: { $gte: startOfWeek }, // Only count deliveries within the current week
+            deliveryBoyId: deliveryBoyId,
+          },
+        },
+        // Project to include day of the week
+        {
+          $project: {
+            dayOfWeek: { $dayOfWeek: "$updatedAt" }, // Get day of the week (1=Sunday, 2=Monday, ..., 7=Saturday)
+          },
+        },
+        // Group by day of the week and count the number of deliveries
+        {
+          $group: {
+            _id: "$dayOfWeek", // Group by day of the week
+            totalDeliveries: { $sum: 1 }, // Count total deliveries for each day
+          },
+        },
+        // Sort by day of the week (1 to 7)
+        { $sort: { _id: 1 } },
+      ]);
+  
+      // Prepare data to match the format of deliveryData
+      const deliveryCounts = new Array(7).fill(0); // Initialize array with 0s for each day of the week
+      deliveries.forEach(delivery => {
+        // delivery._id is the day of the week (1-7)
+        deliveryCounts[delivery._id - 1] = delivery.totalDeliveries; // Map delivery count to the correct day (0-6)
+      });
+  
+      // Return the weekly delivery data in the desired format
+      return res.status(200).json({
+        success: true,
+        weeklyData:{
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        datasets: [
+          {
+            label: "Deliveries Completed",
+            data: deliveryCounts,
+            backgroundColor: "rgba(75, 192, 192, 0.6)",
+            borderColor: "rgba(75, 192, 192, 1)",
+            borderWidth: 1,
+          },
+        ],
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch weekly deliveries",
+      });
+    }
+  }
+  
 }
 
 export default DeliveryController;

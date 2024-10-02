@@ -29,7 +29,6 @@ const isAuthenticated = async (
   next();
 };
 
-
 const authorization = (roles: string[]) => {
   return (req: reqwithuser, res: Response, next: NextFunction) => {
     if (!req.user || !roles.includes(req.user.Role)) {

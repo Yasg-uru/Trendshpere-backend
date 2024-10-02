@@ -821,6 +821,7 @@ export const updateOrderStatus = async (
 ) => {
   try {
     const { orderId, status, cancelReason } = req.body;
+    const userId=req.user?._id;
     const order = await Ordermodel.findById(orderId);
     if (!order) {
       return next(new Errorhandler(404, "Order not found"));
@@ -844,6 +845,7 @@ export const updateOrderStatus = async (
       order.orderStatus = "cancelled";
       order.cancelReason = cancelReason;
       order.cancellationDate = new Date();
+      order.deliveryBoyId=userId as Schema.Types.ObjectId;
       await Promise.all(
         order.products.map(async (item) => {
           const product = await Product.findById(item.productId);
@@ -887,6 +889,7 @@ export const updateOrderStatus = async (
       }
     }
     order.orderStatus = status;
+    order.deliveryBoyId=userId as Schema.Types.ObjectId;
     await order.save();
     res.status(200).json({
       message: `order ${status} successfully`,

@@ -66,6 +66,17 @@ export interface User extends Document {
     type: "Home" | "University" | "Work" | "Hotel";
     _id?: string;
   }[];
+  deliveryArea?: {
+    state: string;
+    postalCode: string;
+    country: string;
+    city: string;
+  };
+  status?: "active" | "inactive";
+  vehicleDetails?: {
+    type: string;
+    numberPlate: string;
+  };
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -96,6 +107,32 @@ const userSchema = new Schema<User>(
         5,
         "your password should be greater than length of 5 characters",
       ],
+    },
+    deliveryArea: {
+      state: {
+        type: String,
+      },
+      postalCode: {
+        type: String,
+      },
+      country: {
+        type: String,
+      },
+      city: {
+        type: String,
+      },
+    },
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+    },
+    vehicleDetails: {
+      type: {
+        type: String,
+      },
+      numberPlate: {
+        type: String,
+      },
     },
     avatar: {
       type: String,

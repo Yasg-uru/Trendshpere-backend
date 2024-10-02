@@ -110,7 +110,7 @@ class DeliveryController {
       const startOfWeek = getStartOfWeek(today); // Get start of the current week
       console.log("this is a start of the week :", startOfWeek);
       const deliveryBoyId = req.user?._id; // Fetch deliveryBoyId from params (or req.query)
-  
+
       // MongoDB aggregation pipeline
       const deliveries = await Ordermodel.aggregate([
         // Match orders where the product was delivered in the current week and by the specific delivery boy
@@ -137,29 +137,29 @@ class DeliveryController {
         // Sort by day of the week (1 to 7)
         { $sort: { _id: 1 } },
       ]);
-  
+
       // Prepare data to match the format of deliveryData
       const deliveryCounts = new Array(7).fill(0); // Initialize array with 0s for each day of the week
-      deliveries.forEach(delivery => {
+      deliveries.forEach((delivery) => {
         // delivery._id is the day of the week (1-7)
         deliveryCounts[delivery._id - 1] = delivery.totalDeliveries; // Map delivery count to the correct day (0-6)
       });
-  
+
       // Return the weekly delivery data in the desired format
       return res.status(200).json({
         success: true,
-        weeklyData:{
+        weeklyData: {
           labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        datasets: [
-          {
-            label: "Deliveries Completed",
-            data: deliveryCounts,
-            backgroundColor: "rgba(75, 192, 192, 0.6)",
-            borderColor: "rgba(75, 192, 192, 1)",
-            borderWidth: 1,
-          },
-        ],
-        }
+          datasets: [
+            {
+              label: "Deliveries Completed",
+              data: deliveryCounts,
+              backgroundColor: "rgba(75, 192, 192, 0.6)",
+              borderColor: "rgba(75, 192, 192, 1)",
+              borderWidth: 1,
+            },
+          ],
+        },
       });
     } catch (error) {
       console.error(error);
@@ -169,7 +169,6 @@ class DeliveryController {
       });
     }
   }
-  
 }
 
 export default DeliveryController;

@@ -81,11 +81,13 @@ class DeliveryController {
       user.vehicleDetails = vehicleDetails;
       user.deliveryArea = deliveryArea;
       user.status = status;
+      user.Role="delivery_boy";
       await user.save();
       res.status(200).json({
         message: "Created delivery boy successfully",
       });
     } catch (error) {
+      console.log("this is a error ", error);
       next(error);
     }
   }

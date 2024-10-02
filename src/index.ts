@@ -15,7 +15,6 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    // origin:  "http://127.0.0.1:5500/payment.html",
     origin: "http://localhost:5173",
 
     credentials: true,
@@ -30,8 +29,8 @@ app.use("/user", userRouter);
 app.use("/order", orderRouter);
 app.use("/delivery", deliveryRouter);
 
-ConnectDB();
 app.use(ErrorhandlerMiddleware);
+ConnectDB();
 
 app.listen(PORT, () => {
   console.log(`Trendsphere server is running on port :${PORT}`);

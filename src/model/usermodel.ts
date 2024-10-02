@@ -13,7 +13,7 @@ export interface User extends Document {
   verifyCode: string;
   isVerified: boolean;
   verifyCodeExpiry: Date;
-  Role: "user" | "admin";
+  Role: "user" | "admin" | "delivery_boy";
   bodyMeasurements: {
     height: number;
     weight: number;
@@ -151,7 +151,7 @@ const userSchema = new Schema<User>(
     },
     Role: {
       type: String,
-      enum: ["user", "admin"],
+      enum: ["user", "admin","delivery_boy"],
       default: "user",
     },
     address: [

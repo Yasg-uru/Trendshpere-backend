@@ -18,7 +18,6 @@ class DeliveryController {
         return next(new Errorhandler(404, "User not found"));
       }
 
-      // Count completed and pending orders
       const orderCounts = await Ordermodel.aggregate([
         {
           $match: {
@@ -38,13 +37,11 @@ class DeliveryController {
         },
       ]);
 
-      // Create an object to hold counts
       const deliveryCounts = {
         completed: 0,
         pending: 0,
       };
 
-      // Populate the counts based on the results from aggregation
       orderCounts.forEach((order) => {
         if (order._id === "delivered") {
           deliveryCounts.completed = order.count;
@@ -53,13 +50,12 @@ class DeliveryController {
         }
       });
 
-      // Fetch pending orders
       const pendingOrders = await Ordermodel.find({
         "address.city": DeliverBoy.deliveryArea?.city,
         "address.state": DeliverBoy.deliveryArea?.state,
         "address.postalCode": DeliverBoy.deliveryArea?.postalCode,
         "address.country": DeliverBoy.deliveryArea?.country,
-        orderStatus: "pending", // Only fetch pending orders
+        orderStatus: "pending",
       });
 
       // Send the response
@@ -71,6 +67,7 @@ class DeliveryController {
       return next(new Errorhandler(500, "Internal server error"));
     }
   }
+  
 }
 
 export default DeliveryController;

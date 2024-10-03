@@ -4,7 +4,7 @@ import { reqwithuser } from "../middleware/auth.middleware";
 import usermodel from "../model/usermodel";
 import Errorhandler from "../util/Errorhandler.util";
 import Ordermodel from "../model/order.model";
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 function getStartOfWeek(date: Date) {
   const startOfWeek = new Date(date);
@@ -221,6 +221,34 @@ class DeliveryController {
               ? `-${Math.abs(performanceDifference).toFixed(2)}% from last week`
               : "",
         },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+  public static async AddRating(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const userId = req.user?._id;
+      const { deliveryBoyId } = req.params;
+
+      const { rating } = req.body;
+      const deliveryBoy = await usermodel.findById(deliveryBoyId);
+      if (!deliveryBoy) {
+        return next(new Errorhandler(404, "Delivery boy not found "));
+      }
+      deliveryBoy.deliveryBoyRatings.ratings =
+        deliveryBoy.deliveryBoyRatings.ratings *
+          (deliveryBoy.deliveryBoyRatings.totalRatings - 1) +
+        rating;
+      deliveryBoy.deliveryBoyRatings.totalRatings += 1;
+      deliveryBoy.deliveryBoyRatings.rateBy = userId as Schema.Types.ObjectId;
+      await deliveryBoy.save();
+      res.status(200).json({
+        message: "successfully added your ratings ",
       });
     } catch (error) {
       next(error);

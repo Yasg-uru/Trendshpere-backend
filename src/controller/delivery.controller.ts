@@ -13,6 +13,9 @@ function getStartOfWeek(date: Date) {
   return startOfWeek;
 }
 class DeliveryController {
+  static calculatePercentage(part: number, total: number): number {
+    return total === 0 ? 0 : (part / total) * 100;
+  }
   public static async getMyDeliveries(
     req: reqwithuser,
     res: Response,
@@ -169,7 +172,60 @@ class DeliveryController {
       });
     }
   }
-  public static async 
+  public static async calculateDeliveryPerformance(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const deliveryBoyId = req.user?._id;
+      const currentDate = new Date();
+      const lastweek = new Date(currentDate.getTime() - 7);
+      const TotalOrders = await Ordermodel.find({
+        deliveryBoyId: deliveryBoyId,
+        orderStatus: "delivered",
+      });
+      const totalDeliveries = TotalOrders.length;
+      const OntimeDeliveries = TotalOrders.filter(
+        (order) => order.isDeliveredOnTime
+      ).length;
+      const onTimePercentage = this.calculatePercentage(
+        OntimeDeliveries,
+        totalDeliveries
+      );
+      const lastweekOrders = await Ordermodel.find({
+        orderStatus: "delivered",
+        deliveryBoyId,
+        deliveryTime: { $gte: lastweek, $lte: currentDate },
+      });
+      const lastWeekOntimeDeliveries = lastweekOrders.filter(
+        (order) => order.isDeliveredOnTime
+      ).length;
+
+      const lastweekpercentage = this.calculatePercentage(
+        lastWeekOntimeDeliveries,
+        lastweekOrders.length
+      );
+      const performanceDifference = onTimePercentage - lastweekpercentage;
+      res.status(200).json({
+        data: {
+          totalDeliveries,
+          OntimeDeliveries,
+          onTimePercentage,
+          lastweekpercentage,
+          performanceDifference: performanceDifference.toFixed(2),
+          message:
+            performanceDifference > 0
+              ? `+${performanceDifference.toFixed(2)}%.`
+              : performanceDifference < 0
+              ? `-${Math.abs(performanceDifference).toFixed(2)}%.`
+              : "",
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default DeliveryController;

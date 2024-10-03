@@ -66,9 +66,9 @@ export interface IOrder extends Document {
     timestamp: Date;
     description?: string;
   }[];
-  deliveryTime: Date;
+  deliveryTime?: Date;
   expectedDeliveryTime: Date;
-  isDeliveredOnTime: boolean;
+  isDeliveredOnTime?: boolean;
   loyaltyPointsUsed?: number;
   isGiftOrder?: boolean;
   giftMessage?: string;
@@ -183,6 +183,7 @@ const orderSchema: Schema = new Schema<IOrder>(
     },
     deliveryBoyId: {
       type: Schema.Types.ObjectId,
+      ref:"User"
     },
 
     auditLog: [

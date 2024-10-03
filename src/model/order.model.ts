@@ -183,7 +183,7 @@ const orderSchema: Schema = new Schema<IOrder>(
     },
     deliveryBoyId: {
       type: Schema.Types.ObjectId,
-      ref:"User"
+      ref: "User",
     },
 
     auditLog: [

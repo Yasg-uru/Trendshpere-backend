@@ -12,10 +12,10 @@ function getStartOfWeek(date: Date) {
   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Adjust to the start of the week (Sunday)
   return startOfWeek;
 }
+const calculatePercentage=(part: number, total: number): number=> {
+  return total === 0 ? 0 : (part / total) * 100;
+}
 class DeliveryController {
-  static calculatePercentage(part: number, total: number): number {
-    return total === 0 ? 0 : (part / total) * 100;
-  }
   public static async getMyDeliveries(
     req: reqwithuser,
     res: Response,
@@ -189,7 +189,7 @@ class DeliveryController {
       const OntimeDeliveries = TotalOrders.filter(
         (order) => order.isDeliveredOnTime
       ).length;
-      const onTimePercentage = this.calculatePercentage(
+      const onTimePercentage = calculatePercentage(
         OntimeDeliveries,
         totalDeliveries
       );
@@ -202,7 +202,7 @@ class DeliveryController {
         (order) => order.isDeliveredOnTime
       ).length;
 
-      const lastweekpercentage = this.calculatePercentage(
+      const lastweekpercentage = calculatePercentage(
         lastWeekOntimeDeliveries,
         lastweekOrders.length
       );
@@ -216,9 +216,9 @@ class DeliveryController {
           performanceDifference: performanceDifference.toFixed(2),
           message:
             performanceDifference > 0
-              ? `+${performanceDifference.toFixed(2)}%.`
+              ? `+${performanceDifference.toFixed(2)}% from last week`
               : performanceDifference < 0
-              ? `-${Math.abs(performanceDifference).toFixed(2)}%.`
+              ? `-${Math.abs(performanceDifference).toFixed(2)}% from last week`
               : "",
         },
       });

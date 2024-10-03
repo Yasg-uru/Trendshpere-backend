@@ -87,6 +87,15 @@ export const createOrder = async (
       receipt: `receipt_${Date.now()}`,
       payment_capture: true,
     });
+    const currentDate = new Date();
+    let expectedDeliveryTime;
+    if (deliveryType === "express") {
+      expectedDeliveryTime = new Date(currentDate);
+      expectedDeliveryTime.setDate(currentDate.getDate() + 2); // For express delivery (e.g., 2 days)
+    } else {
+      expectedDeliveryTime = new Date(currentDate);
+      expectedDeliveryTime.setDate(currentDate.getDate() + 5); // For standard delivery (e.g., 5 days)
+    }
 
     const newOrder = new Ordermodel({
       user,
@@ -116,6 +125,7 @@ export const createOrder = async (
       orderStatus: "pending",
       loyaltyPointsUsed,
       isGiftOrder,
+      expectedDeliveryTime,
       giftMessage,
       auditLog: [
         {

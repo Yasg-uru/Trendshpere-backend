@@ -66,9 +66,9 @@ export interface IOrder extends Document {
     timestamp: Date;
     description?: string;
   }[];
-  deliveryTime?: Date;
-  expectedDeliveryTime?: Date;
-  isDeliveredOnTime?: boolean;
+  deliveryTime: Date;
+  expectedDeliveryTime: Date;
+  isDeliveredOnTime: boolean;
   loyaltyPointsUsed?: number;
   isGiftOrder?: boolean;
   giftMessage?: string;

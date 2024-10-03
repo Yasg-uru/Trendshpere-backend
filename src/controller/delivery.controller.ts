@@ -169,6 +169,7 @@ class DeliveryController {
       });
     }
   }
+  public static async 
 }
 
 export default DeliveryController;

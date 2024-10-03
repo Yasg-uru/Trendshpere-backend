@@ -12,9 +12,9 @@ function getStartOfWeek(date: Date) {
   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Adjust to the start of the week (Sunday)
   return startOfWeek;
 }
-const calculatePercentage=(part: number, total: number): number=> {
+const calculatePercentage = (part: number, total: number): number => {
   return total === 0 ? 0 : (part / total) * 100;
-}
+};
 class DeliveryController {
   public static async getMyDeliveries(
     req: reqwithuser,

@@ -77,6 +77,10 @@ export interface User extends Document {
     type: string;
     numberPlate: string;
   };
+  deliveryBoyRatings: {
+    ratings: number;
+    totalRatings: number;
+  };
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -134,6 +138,16 @@ const userSchema = new Schema<User>(
         type: String,
       },
     },
+    deliveryBoyRatings: {
+      totalRatings: {
+        type: Number,
+        default: 0,
+      },
+      ratings: {
+        type: Number,
+        default: 0,
+      },
+    },
     avatar: {
       type: String,
     },
@@ -151,7 +165,7 @@ const userSchema = new Schema<User>(
     },
     Role: {
       type: String,
-      enum: ["user", "admin","delivery_boy"],
+      enum: ["user", "admin", "delivery_boy"],
       default: "user",
     },
     address: [

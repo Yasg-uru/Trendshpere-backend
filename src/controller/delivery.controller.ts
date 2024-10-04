@@ -283,6 +283,28 @@ class DeliveryController {
       next(error)
     }
   }
+  public static async getDeliveryEarnings(req:reqwithuser,res:Response,next:NextFunction){
+try {
+  const userId=req.user?._id;
+  const deliveryBoy=await usermodel.findById(userId).select("DeliveryBoyEarnings");
+  if(!deliveryBoy){
+    return next(new Errorhandler(404,"User not found "));
+  }
+  const Earnings=deliveryBoy.DeliveryBoyEarnings;
+  const yesterDay=new Date();
+  yesterDay.setDate(yesterDay.getDate()-1);
+  const yesterdayEarnings=Earnings.earningHistory.filter((earning)=>earning.date>=yesterDay).reduce((acc,earning)=>acc+earning.amount,0);
+  const difference=yesterdayEarnings.toFixed(2);
+  res.status(200).json({
+    DeliveryEarnings:{
+      TotalEarnings:Earnings.totalEarnings.toFixed(2),
+    yesterdayEarnings:difference
+    }
+  })
+} catch (error) {
+  next(error)
+}
+  }
 }
 
 export default DeliveryController;

@@ -19,8 +19,21 @@ deliveryRouter.get(
   authorization(["delivery_boy"]),
   DeliveryController.getWeeklyDeliveries
 );
-deliveryRouter.get("/on-time-rating",isAuthenticated,authorization(["delivery_boy"]),DeliveryController.calculateDeliveryPerformance);
-deliveryRouter.post("/rate",isAuthenticated,DeliveryController.AddRating);
-deliveryRouter.get("/ratings",isAuthenticated,DeliveryController.getdeliveryboyRatings);
-
+deliveryRouter.get(
+  "/on-time-rating",
+  isAuthenticated,
+  authorization(["delivery_boy"]),
+  DeliveryController.calculateDeliveryPerformance
+);
+deliveryRouter.post("/rate", isAuthenticated, DeliveryController.AddRating);
+deliveryRouter.get(
+  "/ratings",
+  isAuthenticated,
+  DeliveryController.getdeliveryboyRatings
+);
+deliveryRouter.get(
+  "/earnings",
+  isAuthenticated,
+  DeliveryController.getDeliveryEarnings
+);
 export default deliveryRouter;

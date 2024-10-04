@@ -33,6 +33,15 @@ const calculateDiscountPrice = (couponCode: string, products: any) => {
     };
   });
 };
+const calculateEarnings=(totalAmount :number,isOntime:boolean)=>{
+  if(isOntime){
+return totalAmount*0.06;
+  }else{
+    return totalAmount*0.03;
+
+  }
+
+}
 export const createOrder = async (
   req: reqwithuser,
   res: Response,
@@ -901,6 +910,20 @@ export const updateOrderStatus = async (
       const isOntime = new Date() <= new Date(order.expectedDeliveryTime);
       order.deliveryTime = new Date();
       order.isDeliveredOnTime = isOntime;
+      if(order.deliveryBoyId){
+        const deliveryBoy=await usermodel.findById(order.deliveryBoyId);
+        if(deliveryBoy){
+          const earning=calculateEarnings(order.totalAmount,isOntime);
+          deliveryBoy.DeliveryBoyEarnings.totalEarnings+=earning;
+          deliveryBoy.DeliveryBoyEarnings.earningHistory.push({
+            orderId:order._id as Schema.Types.ObjectId,
+            date:new Date(),
+            amount:earning
+          })
+          await deliveryBoy.save();
+          
+        }
+      }
     }
     order.orderStatus = status;
     order.deliveryBoyId = userId as Schema.Types.ObjectId;

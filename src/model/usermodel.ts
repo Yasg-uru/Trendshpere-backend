@@ -77,18 +77,18 @@ export interface User extends Document {
     type: string;
     numberPlate: string;
   };
-  DeliveryBoyEarnings:{
-    totalEarnings:number ;
-    earningHistory:{
-      orderId:Schema.Types.ObjectId;
-      date:Date;
-      amount:number;
+  DeliveryBoyEarnings: {
+    totalEarnings: number;
+    earningHistory: {
+      orderId: Schema.Types.ObjectId;
+      date: Date;
+      amount: number;
     }[];
   };
   deliveryBoyRatings: {
     ratings: number;
     totalRatings: number;
-    rateBy:Schema.Types.ObjectId[];
+    rateBy: Schema.Types.ObjectId[];
   };
   createdAt: Date;
   updatedAt: Date;
@@ -156,31 +156,31 @@ const userSchema = new Schema<User>(
         type: Number,
         default: 0,
       },
-      rateBy:[{
-        type:Schema.Types.ObjectId,
-        ref:'User'
-      }]
-    },
-    DeliveryBoyEarnings:{
-      totalEarnings:{type:Number ,
-       default:0
-      },
-      earningHistory:[
+      rateBy: [
         {
-          orderId:{
-            type:Schema.Types.ObjectId,
-            ref:'Order'
+          type: Schema.Types.ObjectId,
+          ref: "User",
+        },
+      ],
+    },
+    DeliveryBoyEarnings: {
+      totalEarnings: { type: Number, default: 0 },
+      earningHistory: [
+        {
+          orderId: {
+            type: Schema.Types.ObjectId,
+            ref: "Order",
           },
-          date:{
-            type:Date,
-            default:Date.now()
+          date: {
+            type: Date,
+            default: Date.now(),
           },
-          amount:{
-            type:Number ,
-            default:0
-          }
-        }
-      ]
+          amount: {
+            type: Number,
+            default: 0,
+          },
+        },
+      ],
     },
     avatar: {
       type: String,

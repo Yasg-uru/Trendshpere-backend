@@ -91,7 +91,7 @@ class DeliveryController {
       if (!user) {
         return next(new Errorhandler(404, "User not found "));
       }
-      
+
       user.vehicleDetails = vehicleDetails;
       user.deliveryArea = deliveryArea;
       user.status = status;
@@ -242,8 +242,12 @@ class DeliveryController {
       if (!deliveryBoy) {
         return next(new Errorhandler(404, "Delivery boy not found "));
       }
-      if(deliveryBoy.deliveryBoyRatings.rateBy.includes(userId as Schema.Types.ObjectId)){
-        return next(new Errorhandler(404,"Already you rated "))
+      if (
+        deliveryBoy.deliveryBoyRatings.rateBy.includes(
+          userId as Schema.Types.ObjectId
+        )
+      ) {
+        return next(new Errorhandler(404, "Already you rated "));
       }
 
       deliveryBoy.deliveryBoyRatings.ratings =
@@ -276,34 +280,42 @@ class DeliveryController {
       res.status(200).json({
         ratings: {
           averageRating: deliveryBoy.deliveryBoyRatings.ratings,
-          totalReviews:deliveryBoy.deliveryBoyRatings.totalRatings
+          totalReviews: deliveryBoy.deliveryBoyRatings.totalRatings,
         },
       });
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
-  public static async getDeliveryEarnings(req:reqwithuser,res:Response,next:NextFunction){
-try {
-  const userId=req.user?._id;
-  const deliveryBoy=await usermodel.findById(userId).select("DeliveryBoyEarnings");
-  if(!deliveryBoy){
-    return next(new Errorhandler(404,"User not found "));
-  }
-  const Earnings=deliveryBoy.DeliveryBoyEarnings;
-  const yesterDay=new Date();
-  yesterDay.setDate(yesterDay.getDate()-1);
-  const yesterdayEarnings=Earnings.earningHistory.filter((earning)=>earning.date>=yesterDay).reduce((acc,earning)=>acc+earning.amount,0);
-  const difference=yesterdayEarnings.toFixed(2);
-  res.status(200).json({
-    DeliveryEarnings:{
-      TotalEarnings:Earnings.totalEarnings.toFixed(2),
-    yesterdayEarnings:difference
+  public static async getDeliveryEarnings(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const userId = req.user?._id;
+      const deliveryBoy = await usermodel
+        .findById(userId)
+        .select("DeliveryBoyEarnings");
+      if (!deliveryBoy) {
+        return next(new Errorhandler(404, "User not found "));
+      }
+      const Earnings = deliveryBoy.DeliveryBoyEarnings;
+      const yesterDay = new Date();
+      yesterDay.setDate(yesterDay.getDate() - 1);
+      const yesterdayEarnings = Earnings.earningHistory
+        .filter((earning) => earning.date >= yesterDay)
+        .reduce((acc, earning) => acc + earning.amount, 0);
+      const difference = yesterdayEarnings.toFixed(2);
+      res.status(200).json({
+        DeliveryEarnings: {
+          TotalEarnings: Earnings.totalEarnings.toFixed(2),
+          yesterdayEarnings: difference,
+        },
+      });
+    } catch (error) {
+      next(error);
     }
-  })
-} catch (error) {
-  next(error)
-}
   }
 }
 

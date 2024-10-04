@@ -240,12 +240,18 @@ class DeliveryController {
       if (!deliveryBoy) {
         return next(new Errorhandler(404, "Delivery boy not found "));
       }
+      if(deliveryBoy.deliveryBoyRatings.rateBy.includes(userId as Schema.Types.ObjectId)){
+        return next(new Errorhandler(404,"Already you rated "))
+      }
+
       deliveryBoy.deliveryBoyRatings.ratings =
         deliveryBoy.deliveryBoyRatings.ratings *
           (deliveryBoy.deliveryBoyRatings.totalRatings - 1) +
         rating;
       deliveryBoy.deliveryBoyRatings.totalRatings += 1;
-      deliveryBoy.deliveryBoyRatings.rateBy = userId as Schema.Types.ObjectId;
+      deliveryBoy.deliveryBoyRatings.rateBy.push(
+        userId as Schema.Types.ObjectId
+      );
       await deliveryBoy.save();
       res.status(200).json({
         message: "successfully added your ratings ",
@@ -253,6 +259,25 @@ class DeliveryController {
     } catch (error) {
       next(error);
     }
+  }
+  public static async getdeliveries(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const userId = req.user?._id;
+      const deliveryBoy = await usermodel.findById(userId);
+      if (!deliveryBoy) {
+        return next(new Errorhandler(404, "delivery boy not found"));
+      }
+      res.status(200).json({
+        ratings: {
+          averageRating: deliveryBoy.deliveryBoyRatings.ratings,
+          totalReviews:deliveryBoy.deliveryBoyRatings.totalRatings
+        },
+      });
+    } catch (error) {}
   }
 }
 

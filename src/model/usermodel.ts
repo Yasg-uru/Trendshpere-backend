@@ -80,7 +80,7 @@ export interface User extends Document {
   deliveryBoyRatings: {
     ratings: number;
     totalRatings: number;
-    rateBy:Schema.Types.ObjectId
+    rateBy:Schema.Types.ObjectId[];
   };
   createdAt: Date;
   updatedAt: Date;
@@ -148,10 +148,10 @@ const userSchema = new Schema<User>(
         type: Number,
         default: 0,
       },
-      rateBy:{
+      rateBy:[{
         type:Schema.Types.ObjectId,
         ref:'User'
-      }
+      }]
     },
     avatar: {
       type: String,

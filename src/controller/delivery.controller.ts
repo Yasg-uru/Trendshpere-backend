@@ -87,9 +87,11 @@ class DeliveryController {
     try {
       const { userId, vehicleDetails, deliveryArea, status } = req.body;
       const user = await usermodel.findById(userId);
+
       if (!user) {
         return next(new Errorhandler(404, "User not found "));
       }
+      
       user.vehicleDetails = vehicleDetails;
       user.deliveryArea = deliveryArea;
       user.status = status;
@@ -260,7 +262,7 @@ class DeliveryController {
       next(error);
     }
   }
-  public static async getdeliveries(
+  public static async getdeliveryboyRatings(
     req: reqwithuser,
     res: Response,
     next: NextFunction
@@ -277,7 +279,9 @@ class DeliveryController {
           totalReviews:deliveryBoy.deliveryBoyRatings.totalRatings
         },
       });
-    } catch (error) {}
+    } catch (error) {
+      next(error)
+    }
   }
 }
 

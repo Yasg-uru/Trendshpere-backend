@@ -20,5 +20,7 @@ deliveryRouter.get(
   DeliveryController.getWeeklyDeliveries
 );
 deliveryRouter.get("/on-time-rating",isAuthenticated,authorization(["delivery_boy"]),DeliveryController.calculateDeliveryPerformance);
+deliveryRouter.post("/rate",isAuthenticated,DeliveryController.AddRating);
+deliveryRouter.get("/ratings",isAuthenticated,DeliveryController.getdeliveryboyRatings);
 
 export default deliveryRouter;

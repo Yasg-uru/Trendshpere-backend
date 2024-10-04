@@ -77,6 +77,14 @@ export interface User extends Document {
     type: string;
     numberPlate: string;
   };
+  DeliveryBoyEarnings:{
+    totalEarnings:number ;
+    earningHistory:{
+      orderId:Schema.Types.ObjectId;
+      date:Date;
+      amount:number;
+    }[];
+  };
   deliveryBoyRatings: {
     ratings: number;
     totalRatings: number;
@@ -152,6 +160,27 @@ const userSchema = new Schema<User>(
         type:Schema.Types.ObjectId,
         ref:'User'
       }]
+    },
+    DeliveryBoyEarnings:{
+      totalEarnings:{type:Number ,
+       default:0
+      },
+      earningHistory:[
+        {
+          orderId:{
+            type:Schema.Types.ObjectId,
+            ref:'Order'
+          },
+          date:{
+            type:Date,
+            default:Date.now()
+          },
+          amount:{
+            type:Number ,
+            default:0
+          }
+        }
+      ]
     },
     avatar: {
       type: String,

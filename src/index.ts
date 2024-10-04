@@ -33,6 +33,7 @@ export const io = new SocketServer(server, {
 app.use(urlencoded({ extended: false }));
 
 const PORT = process.env.PORT || 4000;
+const userSocketMap = new Map<string, string>();
 app.use("/product", productRouter);
 app.use("/user", userRouter);
 app.use("/order", orderRouter);
@@ -40,7 +41,18 @@ app.use("/delivery", deliveryRouter);
 
 io.on("connection", (socket) => {
   console.log("socket is connected with id :", socket.id);
+  socket.on("register", (userId: string) => {
+    userSocketMap.set(userId, socket.id);
+    console.log(`User Registered :${userId} with Socket ID :${socket.id} `);
+  });
   socket.on("disconnect", () => {
+    for (const [userId, socketID] of userSocketMap.entries()) {
+      if (socketID === socket.id) {
+        userSocketMap.delete(userId);
+        console.log(`User disconnected: ${userId}`);
+        break;
+      }
+    }
     console.log(`socket is disconnected `);
   });
 });

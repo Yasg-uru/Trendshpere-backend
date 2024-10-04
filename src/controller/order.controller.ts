@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import Errorhandler from "../util/Errorhandler.util";
 import { reqwithuser } from "../middleware/auth.middleware";
 import crypto from "crypto";
-
+import { io } from "..";
 import Ordermodel from "../model/order.model";
 import Razorpay from "razorpay";
 import { Product } from "../model/product.model";
@@ -919,6 +919,11 @@ export const updateOrderStatus = async (
             amount: earning,
           });
           await deliveryBoy.save();
+          io.to(order.user.toString()).emit("orderDelivered", {
+            message:
+              "Your order has been delivered. Please rate your experience.",
+            showRatingModal: true,
+          });
         }
       }
     }

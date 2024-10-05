@@ -239,8 +239,20 @@ export const VerifyPayment = async (
           );
 
           if (variant) {
+            console.log(
+              "this is a variant before updation of the stock:",
+              variant
+            );
             variant.stock -= item.quantity;
+            const size = variant.size.find(
+              (s) => s.size.toString() === item.size.toString()
+            );
+            if (size) {
+              size.stock -= item.quantity;
+            }
+
             await product.save();
+            console.log("this is a variant after stock updation :", variant);
             const productID = product._id;
             io.emit("stock-updated", { productID });
           }

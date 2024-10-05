@@ -23,10 +23,11 @@ app.use(
     credentials: true,
   })
 );
- const io = new SocketServer(server, {
+const io = new SocketServer(server, {
   cors: {
     origin: "http://localhost:5173",
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
@@ -62,4 +63,4 @@ ConnectDB();
 server.listen(PORT, () => {
   console.log(`Trendsphere server is running on port :${PORT}`);
 });
-export {io ,userSocketMap};
+export { io, userSocketMap };

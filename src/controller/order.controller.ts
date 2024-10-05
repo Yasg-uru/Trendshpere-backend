@@ -920,13 +920,17 @@ export const updateOrderStatus = async (
           });
           await deliveryBoy.save();
           const socketId = userSocketMap.get(order.user.toString());
-          if (socketId) {
+          console.log("this is a map :",userSocketMap)
+          if (!socketId) {
+            console.log("Socket ID is undefined for user:", order.user.toString());
+          } else {
             io.to(socketId).emit("orderDelivered", {
-              message:
-                "Your order has been delivered. Please rate your experience.",
-              showRatingModal: true,
+              message: "Your order has been delivered. Please rate your experience.",
+              deliveryBoyID:deliveryBoy._id,
             });
+            console.log("Web socket has sent a message: order is delivered");
           }
+          
         }
       }
     }

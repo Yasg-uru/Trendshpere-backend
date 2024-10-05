@@ -254,7 +254,7 @@ export const VerifyPayment = async (
             await product.save();
             console.log("this is a variant after stock updation :", variant);
             const productID = product._id;
-            io.emit("stock-updated", { productID });
+            io.emit("stock-updated", { productID,variantID:variant._id });
           }
         }
       })

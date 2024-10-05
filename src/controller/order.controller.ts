@@ -241,6 +241,8 @@ export const VerifyPayment = async (
           if (variant) {
             variant.stock -= item.quantity;
             await product.save();
+            const productID = product._id;
+            io.emit("stock-updated", { productID });
           }
         }
       })
@@ -920,17 +922,20 @@ export const updateOrderStatus = async (
           });
           await deliveryBoy.save();
           const socketId = userSocketMap.get(order.user.toString());
-          console.log("this is a map :",userSocketMap)
+          console.log("this is a map :", userSocketMap);
           if (!socketId) {
-            console.log("Socket ID is undefined for user:", order.user.toString());
+            console.log(
+              "Socket ID is undefined for user:",
+              order.user.toString()
+            );
           } else {
             io.to(socketId).emit("orderDelivered", {
-              message: "Your order has been delivered. Please rate your experience.",
-              deliveryBoyID:deliveryBoy._id,
+              message:
+                "Your order has been delivered. Please rate your experience.",
+              deliveryBoyID: deliveryBoy._id,
             });
             console.log("Web socket has sent a message: order is delivered");
           }
-          
         }
       }
     }

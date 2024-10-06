@@ -20,7 +20,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://trendsphere-frontend.onrender.com",
+      "https://trendsphere-three.vercel.app",
     ],
 
     credentials: true,
@@ -30,7 +30,7 @@ const io = new SocketServer(server, {
   cors: {
     origin: [
       "http://localhost:5173",
-      "https://trendsphere-frontend.onrender.com",
+      "https://trendsphere-three.vercel.app",
     ],
     methods: ["GET", "POST"],
     credentials: true,

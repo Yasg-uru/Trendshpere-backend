@@ -506,7 +506,7 @@ class ProductController {
     next: NextFunction
   ) {
     try {
-      const { discountId, productId } = req.params;
+      const { productId } = req.params;
       const { discountPercentage, validFrom, validUntil } = req.body;
       const product = await Product.findById(productId);
       if (!product) {
@@ -727,6 +727,23 @@ class ProductController {
       const products = await Product.find({ _id: { $in: productsIds } });
       res.status(200).json({
         message: "Fetched successfullt products by the ids",
+        products,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+  public static async TopRatedProducts(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const products = await Product.find({ rating: { $gte: 4 } }).sort({
+        rating: -1,
+      });
+
+      res.status(200).json({
         products,
       });
     } catch (error) {

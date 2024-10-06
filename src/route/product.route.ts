@@ -53,7 +53,7 @@ productRouter.post(
 productRouter.put(
   "/discount/:productId",
   isAuthenticated,
-  authorization(["admin"]),
+  // authorization(["admin"]),
   ProductController.updateDiscount
 );
 productRouter.delete(
@@ -88,4 +88,5 @@ productRouter.post(
   isAuthenticated,
   ProductController.GetProductsByIds
 );
+productRouter.get("/top-rated",ProductController.TopRatedProducts);
 export default productRouter;

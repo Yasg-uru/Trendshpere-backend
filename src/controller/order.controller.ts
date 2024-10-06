@@ -254,7 +254,7 @@ export const VerifyPayment = async (
             await product.save();
             console.log("this is a variant after stock updation :", variant);
             const productID = product._id;
-            io.emit("stock-updated", { productID,variantID:variant._id });
+            io.emit("stock-updated", { productID, variantID: variant._id });
           }
         }
       })
@@ -1140,9 +1140,17 @@ export const FilterOrdersForAdmin = async (
         filter.createdAt.$lte = new Date(endDate.toString());
       }
     }
+    const UserId = req.user?._id;
 
-    // Fetching orders based on filters
-    const orders = await Ordermodel.find(filter)
+    const user = await usermodel.findById(UserId);
+    if (!user) {
+      return next(new Errorhandler(404, "User not found "));
+    }
+
+    const orders = await Ordermodel.find({
+      ...filter,
+      "address.postalCode": user.deliveryArea?.postalCode,
+    })
       .populate("user")
       .populate("products.productId")
 

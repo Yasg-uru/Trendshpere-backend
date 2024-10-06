@@ -241,39 +241,50 @@ class ProductController {
       next(error);
     }
   }
-  public static async categories(req: reqwithuser, res: Response, next: NextFunction) {
+  public static async categories(
+    req: reqwithuser,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
       const categoriesWithImages = await Product.aggregate([
         {
           $group: {
-            _id: "$category", 
-            uniqueImages: { $addToSet: "$defaultImage" } 
-          }
+            _id: "$category",
+            uniqueImages: { $addToSet: "$defaultImage" },
+          },
         },
         {
           $project: {
             _id: 0,
-            category: "$_id", 
-            randomImage: { $arrayElemAt: ["$uniqueImages", { $floor: { $multiply: [{ $rand: {} }, { $size: "$uniqueImages" }] } }] } 
-          }
-        }
+            category: "$_id",
+            randomImage: {
+              $arrayElemAt: [
+                "$uniqueImages",
+                {
+                  $floor: {
+                    $multiply: [{ $rand: {} }, { $size: "$uniqueImages" }],
+                  },
+                },
+              ],
+            },
+          },
+        },
       ]);
-  
+
       res.status(200).json({
         message: "Fetched categories successfully",
-        
-        categoriesMapped: categoriesWithImages.map(item => ({
+
+        categoriesMapped: categoriesWithImages.map((item) => ({
           category: item.category,
-          image: item.randomImage
+          image: item.randomImage,
         })),
-        
       });
     } catch (error) {
       next(error);
     }
   }
-  
-  
+
   public static async Helpfulcount(
     req: reqwithuser,
     res: Response,

@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, response, Response } from "express";
 // import catchAsync from "../middleware/catchasync.middleware";
 import usermodel, { User } from "../model/usermodel";
 import bcrypt from "bcrypt";
@@ -367,4 +367,19 @@ export const updateAddress = async (
   } catch (error) {
     next(error);
   }
+  
 };
+export const getUserData=async(req:reqwithuser,res:Response,next:NextFunction)=>{
+  try {
+    const user=await usermodel.findById(req.user?._id);
+    if(!user){
+      return next(new Errorhandler(404,"User not found "));
+    }
+    res.status(200).json({
+      user
+    })
+  } catch (error) {
+    next(error);
+    
+  }
+}

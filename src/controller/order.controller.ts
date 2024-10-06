@@ -83,7 +83,7 @@ export const createOrder = async (
       discountAmount += product.discount * product.quantity;
     });
     let loyaltyDiscount = 0;
-    if (loyaltyPointsUsed && loyaltyPointsUsed > 0) {
+    if (loyaltyPointsUsed > 0) {
       loyaltyDiscount = Math.floor(loyaltyPointsUsed / 10); // 10 loyalty points = 1 rupee
     }
 

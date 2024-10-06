@@ -241,35 +241,39 @@ class ProductController {
       next(error);
     }
   }
-  public static async categories(
-    req: reqwithuser,
-    res: Response,
-    next: NextFunction
-  ) {
+  public static async categories(req: reqwithuser, res: Response, next: NextFunction) {
     try {
-      const categories = await Product.aggregate([
+      const categoriesWithImages = await Product.aggregate([
         {
           $group: {
-            _id: null,
-            uniqueCategories: { $addToSet: "$category" }, // Collecting unique categories
-          },
+            _id: "$category", 
+            uniqueImages: { $addToSet: "$defaultImage" } 
+          }
         },
         {
           $project: {
             _id: 0,
-            categories: "$uniqueCategories", // Rename 'uniqueCategories' to 'categories'
-          },
-        },
+            category: "$_id", 
+            randomImage: { $arrayElemAt: ["$uniqueImages", { $floor: { $multiply: [{ $rand: {} }, { $size: "$uniqueImages" }] } }] } 
+          }
+        }
       ]);
-
+  
       res.status(200).json({
         message: "Fetched categories successfully",
-        categories: categories.length > 0 ? categories[0].categories : [],
+        
+        categoriesMapped: categoriesWithImages.map(item => ({
+          category: item.category,
+          image: item.randomImage
+        })),
+        
       });
     } catch (error) {
       next(error);
     }
   }
+  
+  
   public static async Helpfulcount(
     req: reqwithuser,
     res: Response,

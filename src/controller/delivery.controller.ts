@@ -111,13 +111,12 @@ class DeliveryController {
     next: NextFunction
   ) {
     try {
-      
       const clonedDate = new Date();
       const dayOfWeek = clonedDate.getDay();
       const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       clonedDate.setDate(clonedDate.getDate() - diff);
       clonedDate.setHours(0, 0, 0, 0);
-     
+
       const startOfWeek = clonedDate;
       console.log("this is a start of the week :", startOfWeek);
       const deliveryBoyId = req.user?._id; // Fetch deliveryBoyId from params (or req.query)

@@ -82,11 +82,16 @@ export const createOrder = async (
       totalAmount += product.priceAtPurchase * product.quantity;
       discountAmount += product.discount * product.quantity;
     });
+    let loyaltyDiscount = 0;
+    if (loyaltyPointsUsed && loyaltyPointsUsed > 0) {
+      loyaltyDiscount = Math.floor(loyaltyPointsUsed / 10); // 10 loyalty points = 1 rupee
+    }
+
     // const taxRate = 0.1;
     const taxAmount = totalAmount;
     // const taxAmount = totalAmount * taxRate;
     const finalAmount = Math.floor(
-      totalAmount - discountAmount + deliveryCharge
+      totalAmount - discountAmount - loyaltyDiscount + deliveryCharge
     );
     const razorpayOrder = await razorpay.orders.create({
       amount: parseInt(finalAmount.toString()) * 100,
@@ -178,7 +183,7 @@ export const createOrder = async (
   }
 };
 export const VerifyPayment = async (
-  req: Request,
+  req: reqwithuser,
   res: Response,
   next: NextFunction
 ) => {
@@ -198,6 +203,10 @@ export const VerifyPayment = async (
     const order = await Ordermodel.findOne({
       "payment.paymentId": razorpay_order_id,
     });
+    const user = await usermodel.findById(req.user?._id);
+    if (!user) {
+      return next(new Errorhandler(404, "User not found "));
+    }
     if (!order) {
       return next(new Errorhandler(404, "Order not found "));
     }
@@ -205,6 +214,10 @@ export const VerifyPayment = async (
     order.payment.paymentDate = new Date();
     order.payment.paymentMethod = "Razorpay";
     order.orderStatus = "processing";
+    if (order.loyaltyPointsUsed) {
+      user.loyaltyPoints -= order.loyaltyPointsUsed;
+      await user.save();
+    }
     order.auditLog.push({
       action: "payment_verified",
       actor: order.user,
@@ -229,10 +242,13 @@ export const VerifyPayment = async (
     }
 
     order.save();
+
     await Promise.all(
       order.products.map(async (item) => {
         const product = await Product.findById(item.productId);
         if (product) {
+          user.loyaltyPoints += product.loyalityPoints * item.quantity;
+
           const variant = product.variants.find(
             (variant) =>
               (variant._id as string).toString() === item.variantId.toString()
@@ -259,6 +275,7 @@ export const VerifyPayment = async (
         }
       })
     );
+    await user.save();
     res.status(200).json({
       success: true,
       message: "Payment successfully verified and order updated.",

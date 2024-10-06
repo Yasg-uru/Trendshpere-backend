@@ -25,7 +25,11 @@ deliveryRouter.get(
   authorization(["delivery_boy"]),
   DeliveryController.calculateDeliveryPerformance
 );
-deliveryRouter.post("/rate/:deliveryBoyId", isAuthenticated, DeliveryController.AddRating);
+deliveryRouter.post(
+  "/rate/:deliveryBoyId",
+  isAuthenticated,
+  DeliveryController.AddRating
+);
 deliveryRouter.get(
   "/ratings",
   isAuthenticated,

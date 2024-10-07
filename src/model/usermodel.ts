@@ -72,6 +72,13 @@ export interface User extends Document {
     country: string;
     city: string;
   };
+  delivery_boy_location: {
+    type: {
+      lat: number;
+      long: number;
+    };
+    lastUpdated: Date;
+  };
   status?: "active" | "inactive";
   vehicleDetails?: {
     type: string;
@@ -162,6 +169,13 @@ const userSchema = new Schema<User>(
           ref: "User",
         },
       ],
+    },
+    delivery_boy_location: {
+      type: {
+        lat: Number,
+        long: Number,
+      },
+      lastUpdated: Date,
     },
     DeliveryBoyEarnings: {
       totalEarnings: { type: Number, default: 0 },

@@ -758,6 +758,8 @@ class ProductController {
         rating: -1,
       });
 
+
+      
       res.status(200).json({
         products,
       });

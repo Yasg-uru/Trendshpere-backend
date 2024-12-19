@@ -5,7 +5,7 @@ import usermodel from "../model/usermodel";
 import Errorhandler from "../util/Errorhandler.util";
 import Ordermodel from "../model/order.model";
 import mongoose, { Schema } from "mongoose";
-
+import { io } from "..";
 function getStartOfWeek(date: Date) {
   const startOfWeek = new Date(date);
   startOfWeek.setHours(0, 0, 0, 0); // Set time to 00:00:00

@@ -88,5 +88,5 @@ productRouter.post(
   isAuthenticated,
   ProductController.GetProductsByIds
 );
-productRouter.get("/top-rated", ProductController.TopRatedProducts);
+productRouter.get("/top-rated-products", ProductController.TopRatedProducts);
 export default productRouter;

@@ -18,14 +18,20 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://trendsphere-frontend.vercel.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://trendsphere-frontend.vercel.app",
+    ],
 
     credentials: true,
   })
 );
 const io = new SocketServer(server, {
   cors: {
-    origin: ["http://localhost:5173", "https://trendsphere-frontend.vercel.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://trendsphere-frontend.vercel.app",
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },

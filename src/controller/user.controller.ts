@@ -12,7 +12,8 @@ import { reqwithuser } from "../middleware/auth.middleware";
 import { Schema, ObjectId } from "mongoose";
 import catchAsync from "../middleware/catchasync.middleware";
 import { IProduct, IProductVariant } from "../model/product.model";
-
+import jwt from "jsonwebtoken";
+import { JwtDecodedUser } from "../types/jwtDecodedUser";
 export const registerUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -367,19 +368,43 @@ export const updateAddress = async (
   } catch (error) {
     next(error);
   }
-  
 };
-export const getUserData=async(req:reqwithuser,res:Response,next:NextFunction)=>{
+export const getUserData = async (
+  req: reqwithuser,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const user=await usermodel.findById(req.user?._id);
-    if(!user){
-      return next(new Errorhandler(404,"User not found "));
+    const user = await usermodel.findById(req.user?._id);
+    if (!user) {
+      return next(new Errorhandler(404, "User not found "));
     }
     res.status(200).json({
-      user
-    })
+      user,
+    });
   } catch (error) {
     next(error);
-    
   }
-}
+};
+export const getuserByToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { token } = req.params;
+    const decodedUser = (await jwt.verify(
+      token,
+      process.env.JWT_SECRET as string
+    )) as JwtDecodedUser;
+    const user = await usermodel.findById(decodedUser.id);
+    if (!user) {
+      return next(new Errorhandler(404, "user not found"));
+    }
+    res.status(200).json({
+      user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

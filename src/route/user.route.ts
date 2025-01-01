@@ -3,6 +3,7 @@ import {
   AddNewAddress,
   forgotPassword,
   GetCarts,
+  getuserByToken,
   getUserData,
   Login,
   Logout,
@@ -26,4 +27,5 @@ userRouter.get("/carts", isAuthenticated, GetCarts);
 userRouter.post("/add-address", isAuthenticated, AddNewAddress);
 userRouter.put("/update-address/:addressId", isAuthenticated, updateAddress);
 userRouter.get("/userdata", isAuthenticated, getUserData);
+userRouter.get("/user/:token", getuserByToken);
 export default userRouter;

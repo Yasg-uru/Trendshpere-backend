@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserData = exports.updateAddress = exports.AddNewAddress = exports.GetCarts = exports.Resetpassword = exports.forgotPassword = exports.Logout = exports.Login = exports.verifyuser = exports.registerUser = void 0;
+exports.getuserByToken = exports.getUserData = exports.updateAddress = exports.AddNewAddress = exports.GetCarts = exports.Resetpassword = exports.forgotPassword = exports.Logout = exports.Login = exports.verifyuser = exports.registerUser = void 0;
 // import catchAsync from "../middleware/catchasync.middleware";
 const usermodel_1 = __importDefault(require("../model/usermodel"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
@@ -44,6 +44,7 @@ const cloudinary_util_1 = __importDefault(require("../util/cloudinary.util"));
 const Errorhandler_util_1 = __importDefault(require("../util/Errorhandler.util"));
 const sendtoken_1 = __importDefault(require("../util/sendtoken"));
 const catchasync_middleware_1 = __importDefault(require("../middleware/catchasync.middleware"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 exports.registerUser = (0, catchasync_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { username, email, password, preferences } = req.body;
@@ -336,7 +337,7 @@ const getUserData = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             return next(new Errorhandler_util_1.default(404, "User not found "));
         }
         res.status(200).json({
-            user
+            user,
         });
     }
     catch (error) {
@@ -344,3 +345,20 @@ const getUserData = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.getUserData = getUserData;
+const getuserByToken = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { token } = req.params;
+        const decodedUser = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
+        const user = yield usermodel_1.default.findById(decodedUser.id);
+        if (!user) {
+            return next(new Errorhandler_util_1.default(404, "user not found"));
+        }
+        res.status(200).json({
+            user,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.getuserByToken = getuserByToken;

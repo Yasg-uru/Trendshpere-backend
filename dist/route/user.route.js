@@ -18,4 +18,5 @@ userRouter.get("/carts", auth_middleware_1.isAuthenticated, user_controller_1.Ge
 userRouter.post("/add-address", auth_middleware_1.isAuthenticated, user_controller_1.AddNewAddress);
 userRouter.put("/update-address/:addressId", auth_middleware_1.isAuthenticated, user_controller_1.updateAddress);
 userRouter.get("/userdata", auth_middleware_1.isAuthenticated, user_controller_1.getUserData);
+userRouter.get("/user/:token", user_controller_1.getuserByToken);
 exports.default = userRouter;

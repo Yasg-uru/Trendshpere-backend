@@ -212,23 +212,36 @@ class ProductController {
     static categories(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const categories = yield product_model_1.Product.aggregate([
+                const categoriesWithImages = yield product_model_1.Product.aggregate([
                     {
                         $group: {
-                            _id: null,
-                            uniqueCategories: { $addToSet: "$category" }, // Collecting unique categories
+                            _id: "$category",
+                            uniqueImages: { $addToSet: "$defaultImage" },
                         },
                     },
                     {
                         $project: {
                             _id: 0,
-                            categories: "$uniqueCategories", // Rename 'uniqueCategories' to 'categories'
+                            category: "$_id",
+                            randomImage: {
+                                $arrayElemAt: [
+                                    "$uniqueImages",
+                                    {
+                                        $floor: {
+                                            $multiply: [{ $rand: {} }, { $size: "$uniqueImages" }],
+                                        },
+                                    },
+                                ],
+                            },
                         },
                     },
                 ]);
                 res.status(200).json({
                     message: "Fetched categories successfully",
-                    categories: categories.length > 0 ? categories[0].categories : [],
+                    categoriesMapped: categoriesWithImages.map((item) => ({
+                        category: item.category,
+                        image: item.randomImage,
+                    })),
                 });
             }
             catch (error) {
@@ -429,7 +442,7 @@ class ProductController {
     static updateDiscount(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const { discountId, productId } = req.params;
+                const { productId } = req.params;
                 const { discountPercentage, validFrom, validUntil } = req.body;
                 const product = yield product_model_1.Product.findById(productId);
                 if (!product) {
@@ -638,6 +651,21 @@ class ProductController {
                 const products = yield product_model_1.Product.find({ _id: { $in: productsIds } });
                 res.status(200).json({
                     message: "Fetched successfullt products by the ids",
+                    products,
+                });
+            }
+            catch (error) {
+                next(error);
+            }
+        });
+    }
+    static TopRatedProducts(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const products = yield product_model_1.Product.find({ rating: { $gte: 4 } }).sort({
+                    rating: -1,
+                });
+                res.status(200).json({
                     products,
                 });
             }

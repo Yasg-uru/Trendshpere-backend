@@ -14,6 +14,6 @@ orderRouter.post("/process-replacement", auth_middleware_1.isAuthenticated, orde
 orderRouter.get("/filter", auth_middleware_1.isAuthenticated, order_controller_1.FilterOrders);
 orderRouter.get("/search", auth_middleware_1.isAuthenticated, order_controller_1.searchOrders);
 orderRouter.put("/update", auth_middleware_1.isAuthenticated, order_controller_1.updateOrderStatus);
-orderRouter.get("/filter-order", auth_middleware_1.isAuthenticated, order_controller_1.FilterOrdersForAdmin);
+orderRouter.get("/filter-order", auth_middleware_1.isAuthenticated, (0, auth_middleware_1.authorization)(["delivery_boy", "admin"]), order_controller_1.FilterOrdersForAdmin);
 orderRouter.get("/single/:orderId", auth_middleware_1.isAuthenticated, order_controller_1.GetSingleOrder);
 exports.default = orderRouter;

@@ -72,10 +72,14 @@ const createOrder = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             totalAmount += product.priceAtPurchase * product.quantity;
             discountAmount += product.discount * product.quantity;
         });
+        let loyaltyDiscount = 0;
+        if (loyaltyPointsUsed > 0) {
+            loyaltyDiscount = Math.floor(loyaltyPointsUsed / 10); // 10 loyalty points = 1 rupee
+        }
         // const taxRate = 0.1;
         const taxAmount = totalAmount;
         // const taxAmount = totalAmount * taxRate;
-        const finalAmount = Math.floor(totalAmount - discountAmount + deliveryCharge);
+        const finalAmount = Math.floor(totalAmount - discountAmount - loyaltyDiscount + deliveryCharge);
         const razorpayOrder = yield razorpay.orders.create({
             amount: parseInt(finalAmount.toString()) * 100,
             currency: "INR",
@@ -163,6 +167,7 @@ const createOrder = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
 });
 exports.createOrder = createOrder;
 const VerifyPayment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
         const generatedSignature = crypto_1.default
@@ -176,6 +181,10 @@ const VerifyPayment = (req, res, next) => __awaiter(void 0, void 0, void 0, func
         const order = yield order_model_1.default.findOne({
             "payment.paymentId": razorpay_order_id,
         });
+        const user = yield usermodel_1.default.findById((_a = req.user) === null || _a === void 0 ? void 0 : _a._id);
+        if (!user) {
+            return next(new Errorhandler_util_1.default(404, "User not found "));
+        }
         if (!order) {
             return next(new Errorhandler_util_1.default(404, "Order not found "));
         }
@@ -183,6 +192,10 @@ const VerifyPayment = (req, res, next) => __awaiter(void 0, void 0, void 0, func
         order.payment.paymentDate = new Date();
         order.payment.paymentMethod = "Razorpay";
         order.orderStatus = "processing";
+        if (order.loyaltyPointsUsed) {
+            user.loyaltyPoints -= order.loyaltyPointsUsed;
+            yield user.save();
+        }
         order.auditLog.push({
             action: "payment_verified",
             actor: order.user,
@@ -207,6 +220,7 @@ const VerifyPayment = (req, res, next) => __awaiter(void 0, void 0, void 0, func
         yield Promise.all(order.products.map((item) => __awaiter(void 0, void 0, void 0, function* () {
             const product = yield product_model_1.Product.findById(item.productId);
             if (product) {
+                user.loyaltyPoints += product.loyalityPoints * item.quantity;
                 const variant = product.variants.find((variant) => variant._id.toString() === item.variantId.toString());
                 if (variant) {
                     console.log("this is a variant before updation of the stock:", variant);
@@ -222,6 +236,7 @@ const VerifyPayment = (req, res, next) => __awaiter(void 0, void 0, void 0, func
                 }
             }
         })));
+        yield user.save();
         res.status(200).json({
             success: true,
             message: "Payment successfully verified and order updated.",
@@ -849,6 +864,7 @@ const processReturnedItems = (req, res, next) => __awaiter(void 0, void 0, void 
 });
 exports.processReturnedItems = processReturnedItems;
 const FilterOrdersForAdmin = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     try {
         const { deliveryType, orderStatus, userId, startDate, endDate, productId, page = 1, limit = 10, searchTerm, } = req.query;
         // Convert page and limit to numbers
@@ -900,8 +916,12 @@ const FilterOrdersForAdmin = (req, res, next) => __awaiter(void 0, void 0, void 
                 filter.createdAt.$lte = new Date(endDate.toString());
             }
         }
-        // Fetching orders based on filters
-        const orders = yield order_model_1.default.find(filter)
+        const UserId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+        const user = yield usermodel_1.default.findById(UserId);
+        if (!user) {
+            return next(new Errorhandler_util_1.default(404, "User not found "));
+        }
+        const orders = yield order_model_1.default.find(Object.assign(Object.assign({}, filter), { "address.postalCode": (_b = user.deliveryArea) === null || _b === void 0 ? void 0 : _b.postalCode }))
             .populate("user")
             .populate("products.productId")
             .skip((pageNumber - 1) * limitNumber)

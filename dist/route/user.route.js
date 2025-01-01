@@ -17,4 +17,5 @@ userRouter.put("/reset-password/:token", user_controller_1.Resetpassword);
 userRouter.get("/carts", auth_middleware_1.isAuthenticated, user_controller_1.GetCarts);
 userRouter.post("/add-address", auth_middleware_1.isAuthenticated, user_controller_1.AddNewAddress);
 userRouter.put("/update-address/:addressId", auth_middleware_1.isAuthenticated, user_controller_1.updateAddress);
+userRouter.get("/userdata", auth_middleware_1.isAuthenticated, user_controller_1.getUserData);
 exports.default = userRouter;

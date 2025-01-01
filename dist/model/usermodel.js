@@ -105,6 +105,13 @@ const userSchema = new mongoose_1.Schema({
             },
         ],
     },
+    delivery_boy_location: {
+        type: {
+            lat: Number,
+            long: Number,
+        },
+        lastUpdated: Date,
+    },
     DeliveryBoyEarnings: {
         totalEarnings: { type: Number, default: 0 },
         earningHistory: [

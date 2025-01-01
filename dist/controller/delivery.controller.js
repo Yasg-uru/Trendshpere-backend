@@ -112,8 +112,12 @@ class DeliveryController {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
-                const today = new Date();
-                const startOfWeek = getStartOfWeek(today); // Get start of the current week
+                const clonedDate = new Date();
+                const dayOfWeek = clonedDate.getDay();
+                const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                clonedDate.setDate(clonedDate.getDate() - diff);
+                clonedDate.setHours(0, 0, 0, 0);
+                const startOfWeek = clonedDate;
                 console.log("this is a start of the week :", startOfWeek);
                 const deliveryBoyId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id; // Fetch deliveryBoyId from params (or req.query)
                 // MongoDB aggregation pipeline

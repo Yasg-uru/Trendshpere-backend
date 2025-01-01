@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateAddress = exports.AddNewAddress = exports.GetCarts = exports.Resetpassword = exports.forgotPassword = exports.Logout = exports.Login = exports.verifyuser = exports.registerUser = void 0;
+exports.getUserData = exports.updateAddress = exports.AddNewAddress = exports.GetCarts = exports.Resetpassword = exports.forgotPassword = exports.Logout = exports.Login = exports.verifyuser = exports.registerUser = void 0;
 // import catchAsync from "../middleware/catchasync.middleware";
 const usermodel_1 = __importDefault(require("../model/usermodel"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
@@ -328,3 +328,19 @@ const updateAddress = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.updateAddress = updateAddress;
+const getUserData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const user = yield usermodel_1.default.findById((_a = req.user) === null || _a === void 0 ? void 0 : _a._id);
+        if (!user) {
+            return next(new Errorhandler_util_1.default(404, "User not found "));
+        }
+        res.status(200).json({
+            user
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.getUserData = getUserData;

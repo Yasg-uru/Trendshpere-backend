@@ -393,10 +393,10 @@ export const getuserByToken = async (
 ) => {
   try {
     const { token } = req.params;
-    const decodedUser = (await jwt.verify(
+    const decodedUser =  jwt.verify(
       token,
       process.env.JWT_SECRET as string
-    )) as JwtDecodedUser;
+    ) as JwtDecodedUser;
     const user = await usermodel.findById(decodedUser.id);
     if (!user) {
       return next(new Errorhandler(404, "user not found"));

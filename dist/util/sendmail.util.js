@@ -20,7 +20,7 @@ const Transporter = nodemailer_1.default.createTransport({
     service: "yashpawar12122004@gmail.com",
     auth: {
         user: "yashpawar12122004@gmail.com",
-        pass: "nwxb yuwl uioz dzkc",
+        pass: "arhj ynqn zxbk dncj",
     },
 });
 const sendVerificationMail = (username, email, verifyCode) => __awaiter(void 0, void 0, void 0, function* () {

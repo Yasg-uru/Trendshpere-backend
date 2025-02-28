@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   AddNewAddress,
+  authCheck,
   forgotPassword,
   GetCarts,
   getuserByToken,
@@ -28,4 +29,5 @@ userRouter.post("/add-address", isAuthenticated, AddNewAddress);
 userRouter.put("/update-address/:addressId", isAuthenticated, updateAddress);
 userRouter.get("/userdata", isAuthenticated, getUserData);
 userRouter.get("/user/:token", getuserByToken);
+userRouter.get('/me', isAuthenticated, authCheck);
 export default userRouter;

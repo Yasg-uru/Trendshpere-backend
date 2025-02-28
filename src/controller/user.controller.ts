@@ -133,6 +133,21 @@ export const verifyuser = catchAsync(
     }
   }
 );
+export const authCheck = catchAsync(
+  async (req: reqwithuser, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?._id;
+    const user = await usermodel.findById(userId);
+    if(!user) {
+      return  next(new Errorhandler(404, "User not found"));
+  }
+    res.status(200).json(user);
+
+  } catch (error) {
+    next(error);
+    
+  }
+  });
 
 export const Login = catchAsync(async (req, res, next) => {
   try {
